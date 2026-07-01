@@ -11,6 +11,7 @@ import '../../current_affairs/models/article_models.dart';
 import '../../current_affairs/presentation/article_detail_screen.dart';
 import '../../workspace/data/workspace_service.dart';
 import '../../workspace/models/workspace_models.dart';
+import 'onboarding_tour_widget.dart';
 
 class DashboardHomeScreen extends StatefulWidget {
   final Function(int index, {String? subjectId}) onNavigate;
@@ -35,6 +36,22 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
   List<ArticleSummary> _highlightArticles = [];
   List<ArticleSummary> _latestUpdates = [];
   StudentFork? _continueReadingFork;
+
+  // Onboarding Guided Tour Keys & States
+  final GlobalKey _keyBanner = GlobalKey();
+  final GlobalKey _keySubjects = GlobalKey();
+  final GlobalKey _keyHighlights = GlobalKey();
+  final GlobalKey _keyContinueReading = GlobalKey();
+  final GlobalKey _keyProgress = GlobalKey();
+
+  bool _showTour = false;
+  bool _dismissedTourBanner = false;
+
+  void _startTour() {
+    setState(() {
+      _showTour = true;
+    });
+  }
 
   // Selected quote
   late final String _quote;
@@ -196,10 +213,12 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
     final apiClient = Provider.of<ApiClient>(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: RefreshIndicator(
-        color: const Color(0xFF101E60),
-        onRefresh: _loadDashboardData,
-        child: _loading
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            color: const Color(0xFF101E60),
+            onRefresh: _loadDashboardData,
+            child: _loading
             ? const Center(child: CircularProgressIndicator(color: Color(0xFF101E60)))
             : _error != null
                 ? _buildErrorWidget()
@@ -230,12 +249,19 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildSubscriptionBanner(apiClient),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
+                        if (!_dismissedTourBanner) ...[
+                          _buildTourBanner(),
+                          const SizedBox(height: 24),
+                        ],
 
                         // 2. EXPLORE BY SUBJECT
                         _buildSectionHeader("EXPLORE BY SUBJECT"),
                         const SizedBox(height: 10),
-                        _buildExploreSubjectsRow(),
+                        Container(
+                          key: _keySubjects,
+                          child: _buildExploreSubjectsRow(),
+                        ),
                         const SizedBox(height: 24),
 
                         // 3. DAILY HIGHLIGHTS
@@ -244,13 +270,19 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                           style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted),
                         )),
                         const SizedBox(height: 10),
-                        _buildDailyHighlightsCarousel(),
+                        Container(
+                          key: _keyHighlights,
+                          child: _buildDailyHighlightsCarousel(),
+                        ),
                         const SizedBox(height: 24),
 
                         // 4. CONTINUE READING
                         _buildSectionHeader("CONTINUE READING"),
                         const SizedBox(height: 10),
-                        _buildContinueReadingCard(),
+                        Container(
+                          key: _keyContinueReading,
+                          child: _buildContinueReadingCard(),
+                        ),
                         const SizedBox(height: 24),
 
                         // 5. PRELIMS FOCUS
@@ -286,7 +318,10 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                           style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppColors.muted),
                         )),
                         const SizedBox(height: 12),
-                        _buildGsProgressList(),
+                        Container(
+                          key: _keyProgress,
+                          child: _buildGsProgressList(),
+                        ),
                         const SizedBox(height: 24),
 
                         // 8. RETENTION TIP
@@ -295,8 +330,47 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                     ),
                   ),
       ),
-    );
-  }
+      if (_showTour)
+        OnboardingTourWidget(
+          steps: [
+            TourStep(
+              targetKey: _keyBanner,
+              badge: "Step 1 of 5: Member Center",
+              title: "Subscription Status Tracker",
+              body: "View your active daily reading tier, validation tokens, and plan tier limits here at the top of your dashboard.",
+            ),
+            TourStep(
+              targetKey: _keySubjects,
+              badge: "Step 2 of 5: Subject Explorer",
+              title: "Explore UPSC Syllabus Subjects",
+              body: "Tap any subject icon to jump directly into category-filtered Prelims mock tests or Mains writing boards.",
+            ),
+            TourStep(
+              targetKey: _keyHighlights,
+              badge: "Step 3 of 5: Daily News Feed",
+              title: "Curated Current Affairs Editorials",
+              body: "Read unlimited daily current affairs analysis. Tap any editorial card to open the reader and tag revision notes.",
+            ),
+            TourStep(
+              targetKey: _keyContinueReading,
+              badge: "Step 4 of 5: Active Prep Tracker",
+              title: "Resume Where You Left Off",
+              body: "Instantly resume reading your last opened article or view notes repositories that you modified recently.",
+            ),
+            TourStep(
+              targetKey: _keyProgress,
+              badge: "Step 5 of 5: Syllabus Coverage",
+              title: "GS Paper Completion Progress",
+              body: "Tracks your overall prep coverage across GS Papers 1 to 4 based on completed tests and notes count.",
+            ),
+          ],
+          onClose: () => setState(() => _showTour = false),
+          themeColor: const Color(0xFF101E60),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildSectionHeader(String title, {Widget? rightWidget}) {
     return Row(
@@ -931,6 +1005,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
     final isPremium = hasCAPro;
 
     return Container(
+      key: _keyBanner,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -1049,6 +1124,81 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTourBanner() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFC7D2FE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF101E60), size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Interactive Product Tour",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    color: const Color(0xFF1E1B4B),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Let us show you how mock tests and mentors work.",
+                  style: GoogleFonts.inter(
+                    fontSize: 10.5,
+                    color: const Color(0xFF4338CA),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF101E60),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: _startTour,
+            child: Text(
+              "Start",
+              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            constraints: const BoxConstraints(),
+            padding: EdgeInsets.zero,
+            icon: const Icon(Icons.close_rounded, color: Color(0xFF4338CA), size: 18),
+            onPressed: () => setState(() => _dismissedTourBanner = true),
+          ),
+        ],
       ),
     );
   }
