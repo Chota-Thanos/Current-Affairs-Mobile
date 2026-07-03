@@ -46,11 +46,67 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
 
   bool _showTour = false;
   bool _dismissedTourBanner = false;
+  List<TourStep> _tourSteps = [];
 
   void _startTour() {
     setState(() {
       _showTour = true;
     });
+  }
+
+  GlobalKey? _getGlobalKeyBySelector(String selector) {
+    final clean = selector.replaceAll('#', '').trim().toLowerCase();
+    switch (clean) {
+      case 'banner':
+      case 'tour-banner':
+        return _keyBanner;
+      case 'subjects':
+      case 'tour-subjects':
+        return _keySubjects;
+      case 'highlights':
+      case 'tour-highlights':
+        return _keyHighlights;
+      case 'continue_reading':
+      case 'continue-reading':
+      case 'tour-continue-reading':
+        return _keyContinueReading;
+      case 'progress':
+      case 'tour-progress':
+        return _keyProgress;
+      default:
+        return null;
+    }
+  }
+
+  Future<void> _fetchTourSteps() async {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    try {
+      final res = await apiClient.get('/api/v1/onboarding/tours?key=mobile_home_tour');
+      if (res != null && res['steps'] is List) {
+        final List<TourStep> fetched = [];
+        for (var step in res['steps']) {
+          final selector = step['selector'] as String? ?? '';
+          final key = _getGlobalKeyBySelector(selector);
+          if (key != null) {
+            fetched.add(
+              TourStep(
+                targetKey: key,
+                title: step['title'] ?? '',
+                body: step['body'] ?? '',
+                badge: step['badge'] ?? '',
+              ),
+            );
+          }
+        }
+        if (mounted && fetched.isNotEmpty) {
+          setState(() {
+            _tourSteps = fetched;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Failed to fetch dynamic tour steps: $e");
+    }
   }
 
   // Selected quote
@@ -84,8 +140,16 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
     });
 
     try {
-      // 1. Fetch reading dashboard data for continue reading and statistics
-      final dashboard = await _workspaceService.getReadingDashboard(limit: 5);
+      final apiClient = Provider.of<ApiClient>(context, listen: false);
+      
+      // Fetch tour steps
+      _fetchTourSteps();
+
+      // 1. Fetch reading dashboard data for continue reading and statistics (skip in guest mode)
+      dynamic dashboard;
+      if (!apiClient.isGuestMode) {
+        dashboard = await _workspaceService.getReadingDashboard(limit: 5);
+      }
       
       // 2. Fetch daily current affairs for highlights
       final highlightRes = await _articleService.getArticles(
@@ -106,7 +170,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
 
       if (!mounted) return;
       setState(() {
-        if (dashboard.continueReading.isNotEmpty) {
+        if (dashboard != null && dashboard.continueReading != null && dashboard.continueReading.isNotEmpty) {
           _continueReadingFork = dashboard.continueReading.first;
         } else {
           _continueReadingFork = null;
@@ -332,38 +396,40 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
       ),
       if (_showTour)
         OnboardingTourWidget(
-          steps: [
-            TourStep(
-              targetKey: _keyBanner,
-              badge: "Step 1 of 5: Member Center",
-              title: "Subscription Status Tracker",
-              body: "View your active daily reading tier, validation tokens, and plan tier limits here at the top of your dashboard.",
-            ),
-            TourStep(
-              targetKey: _keySubjects,
-              badge: "Step 2 of 5: Subject Explorer",
-              title: "Explore UPSC Syllabus Subjects",
-              body: "Tap any subject icon to jump directly into category-filtered Prelims mock tests or Mains writing boards.",
-            ),
-            TourStep(
-              targetKey: _keyHighlights,
-              badge: "Step 3 of 5: Daily News Feed",
-              title: "Curated Current Affairs Editorials",
-              body: "Read unlimited daily current affairs analysis. Tap any editorial card to open the reader and tag revision notes.",
-            ),
-            TourStep(
-              targetKey: _keyContinueReading,
-              badge: "Step 4 of 5: Active Prep Tracker",
-              title: "Resume Where You Left Off",
-              body: "Instantly resume reading your last opened article or view notes repositories that you modified recently.",
-            ),
-            TourStep(
-              targetKey: _keyProgress,
-              badge: "Step 5 of 5: Syllabus Coverage",
-              title: "GS Paper Completion Progress",
-              body: "Tracks your overall prep coverage across GS Papers 1 to 4 based on completed tests and notes count.",
-            ),
-          ],
+          steps: _tourSteps.isNotEmpty
+              ? _tourSteps
+              : [
+                  TourStep(
+                    targetKey: _keyBanner,
+                    badge: "Step 1 of 5: Member Center",
+                    title: "Subscription Status Tracker",
+                    body: "View your active daily reading tier, validation tokens, and plan tier limits here at the top of your dashboard.",
+                  ),
+                  TourStep(
+                    targetKey: _keySubjects,
+                    badge: "Step 2 of 5: Subject Explorer",
+                    title: "Explore UPSC Syllabus Subjects",
+                    body: "Tap any subject icon to jump directly into category-filtered Prelims mock tests or Mains writing boards.",
+                  ),
+                  TourStep(
+                    targetKey: _keyHighlights,
+                    badge: "Step 3 of 5: Daily News Feed",
+                    title: "Curated Current Affairs Editorials",
+                    body: "Read unlimited daily current affairs analysis. Tap any editorial card to open the reader and tag revision notes.",
+                  ),
+                  TourStep(
+                    targetKey: _keyContinueReading,
+                    badge: "Step 4 of 5: Active Prep Tracker",
+                    title: "Resume Where You Left Off",
+                    body: "Instantly resume reading your last opened article or view notes repositories that you modified recently.",
+                  ),
+                  TourStep(
+                    targetKey: _keyProgress,
+                    badge: "Step 5 of 5: Syllabus Coverage",
+                    title: "GS Paper Completion Progress",
+                    body: "Tracks your overall prep coverage across GS Papers 1 to 4 based on completed tests and notes count.",
+                  ),
+                ],
           onClose: () => setState(() => _showTour = false),
           themeColor: const Color(0xFF101E60),
         ),

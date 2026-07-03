@@ -111,8 +111,8 @@ class AuthWrapper extends StatelessWidget {
       );
     }
 
-    // Switch between authenticated and unauthenticated screens
-    if (apiClient.isAuthenticated) {
+    // Switch between authenticated/guest and unauthenticated screens
+    if (apiClient.isAuthenticated || apiClient.isGuestMode) {
       return const NavigationHome();
     } else {
       return const LoginScreen();

@@ -7,6 +7,7 @@ import 'dashboard_home_screen.dart';
 import '../../current_affairs/presentation/daily_news_feed_screen.dart';
 import '../../workspace/presentation/notes_space_dashboard_screen.dart';
 import '../../workspace/presentation/workspace_ai_helper_screen.dart';
+import '../../../../core/utils/auth_interception_helper.dart';
 
 class NavigationHome extends StatefulWidget {
   const NavigationHome({super.key});
@@ -161,6 +162,10 @@ class NavigationHomeState extends State<NavigationHome> {
               selected: _currentIndex == 3,
               onTap: () {
                 Navigator.pop(context);
+                if (apiClient.isGuestMode) {
+                  AuthInterceptionHelper.checkAuthAndPrompt(context, apiClient);
+                  return;
+                }
                 setState(() => _currentIndex = 3);
               },
             ),
@@ -170,6 +175,10 @@ class NavigationHomeState extends State<NavigationHome> {
               selected: _currentIndex == 4,
               onTap: () {
                 Navigator.pop(context);
+                if (apiClient.isGuestMode) {
+                  AuthInterceptionHelper.checkAuthAndPrompt(context, apiClient);
+                  return;
+                }
                 setState(() => _currentIndex = 4);
               },
             ),
@@ -213,6 +222,10 @@ class NavigationHomeState extends State<NavigationHome> {
           height: 65,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           onDestinationSelected: (index) {
+            if ((index == 3 || index == 4) && apiClient.isGuestMode) {
+              AuthInterceptionHelper.checkAuthAndPrompt(context, apiClient);
+              return;
+            }
             setState(() {
               _currentIndex = index;
             });
