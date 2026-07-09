@@ -56,63 +56,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     try {
       final detail = await _service.getArticleBySlug(widget.slug);
       
-      // Gating checks
-      final apiClient = Provider.of<ApiClient>(context, listen: false);
-      final isMains = detail.contentFamily == 'mains';
-      final hasCAPro = apiClient.hasEntitlement('current_affairs.editorial_access');
+      // Gating checks disabled per user request: no limits on reading news
       bool locked = false;
       String lockReason = 'mains';
       int? todayReadCount;
-
-      if (isMains) {
-        if (!hasCAPro) {
-          locked = true;
-          lockReason = 'mains';
-        }
-      } else {
-        final hasDailyReads = apiClient.hasEntitlement('current_affairs.daily_reads');
-        if (!hasCAPro && !hasDailyReads) {
-          final prefs = await SharedPreferences.getInstance();
-          final todayStr = DateTime.now().toIso8601String().substring(0, 10);
-          final rawData = prefs.getString('coaching_hub_reads');
-          
-          Map<String, dynamic> readData = {
-            'date': todayStr,
-            'count': 0,
-            'readSlugs': <String>[],
-          };
-          
-          if (rawData != null) {
-            try {
-              final Map<String, dynamic> decoded = jsonDecode(rawData);
-              if (decoded['date'] == todayStr) {
-                readData['date'] = decoded['date'];
-                readData['count'] = decoded['count'] ?? 0;
-                readData['readSlugs'] = List<String>.from(decoded['readSlugs'] ?? []);
-              }
-            } catch (_) {}
-          }
-          
-          final readSlugs = List<String>.from(readData['readSlugs']);
-          int count = readData['count'] as int;
-          
-          if (readSlugs.contains(detail.slug)) {
-            locked = false;
-            todayReadCount = count;
-          } else if (count >= 5) {
-            locked = true;
-            lockReason = 'limit';
-          } else {
-            count += 1;
-            readSlugs.add(detail.slug);
-            readData['count'] = count;
-            readData['readSlugs'] = readSlugs;
-            await prefs.setString('coaching_hub_reads', jsonEncode(readData));
-            locked = false;
-            todayReadCount = count;
-          }
-        }
-      }
 
       if (locked) {
         setState(() {
