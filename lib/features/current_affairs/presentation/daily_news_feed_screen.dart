@@ -11,10 +11,16 @@ import 'article_detail_screen.dart';
 
 class DailyNewsFeedScreen extends StatefulWidget {
   final int initialTab;
+  final int initialPrelimsSubTab;
+  final int initialMainsSubTab;
+  final String? initialCategoryName;
 
   const DailyNewsFeedScreen({
     super.key,
     required this.initialTab,
+    this.initialPrelimsSubTab = 0,
+    this.initialMainsSubTab = 0,
+    this.initialCategoryName,
   });
 
   @override
@@ -28,7 +34,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
   String? _error;
 
   void applyExternalFilters({
-    String? subjectId,
+    String? subjectName,
     int? mainTab,
     int? prelimsSubTab,
     int? mainsSubTab,
@@ -37,9 +43,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
       if (mainTab != null) _selectedMainTab = mainTab;
       if (prelimsSubTab != null) _selectedPrelimsSubTab = prelimsSubTab;
       if (mainsSubTab != null) _selectedMainsSubTab = mainsSubTab;
-      _selectedSubjectId = subjectId;
-      _selectedTopicId = null;
-      _selectedSubtopicId = null;
+      _pendingSubjectName = subjectName;
       _currentPage = 1;
     });
     _updateHubFromTabs();
@@ -58,6 +62,8 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
 
   // Filters
   ArticleFilters? _filters;
+  String? _pendingSubjectName;
+  String? _selectedGsPaperId;
   String? _selectedSubjectId;
   String? _selectedTopicId;
   String? _selectedSubtopicId;
@@ -139,7 +145,10 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
     _service = ArticleService(apiClient: apiClient);
     _workspaceService = WorkspaceService(apiClient: apiClient);
     _selectedMainTab = widget.initialTab;
-    _loadFiltersAndArticles();
+    _selectedPrelimsSubTab = widget.initialPrelimsSubTab;
+    _selectedMainsSubTab = widget.initialMainsSubTab;
+    _pendingSubjectName = widget.initialCategoryName;
+    _updateHubFromTabs();
     _loadCollections();
   }
 
@@ -167,7 +176,25 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
     try {
       // 1. Fetch filters
       final filters = await _service.getFilters(_selectedHubKind, _selectedHubFamily);
-      
+
+      // Resolve a category requested from outside this screen (e.g. the home page or
+      // the category browser) by name against this family's freshly loaded categories,
+      // since prelims and mains have entirely separate category trees with different ids.
+      if (_pendingSubjectName != null) {
+        final wanted = _pendingSubjectName!.toLowerCase();
+        final subjectMatch = filters.categories.where((c) => c.nodeType == "subject" && c.name.toLowerCase() == wanted);
+        final gsPaperMatch = filters.categories.where((c) => c.nodeType == "gs_paper" && c.name.toLowerCase() == wanted);
+        if (subjectMatch.isNotEmpty) {
+          final subject = subjectMatch.first;
+          _selectedSubjectId = subject.id.toString();
+          final parentPaper = filters.categories.where((c) => c.nodeType == "gs_paper" && c.id == subject.parentId);
+          if (parentPaper.isNotEmpty) _selectedGsPaperId = parentPaper.first.id.toString();
+        } else if (gsPaperMatch.isNotEmpty) {
+          _selectedGsPaperId = gsPaperMatch.first.id.toString();
+        }
+        _pendingSubjectName = null;
+      }
+
       // 2. Fetch articles
       final categoryId = _selectedSubtopicId ?? _selectedTopicId ?? _selectedSubjectId;
       final response = await _service.getArticles(
@@ -260,6 +287,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
       _selectedHubRole = hub['role'] ?? 'event';
 
       // Reset filters
+      _selectedGsPaperId = null;
       _selectedSubjectId = null;
       _selectedTopicId = null;
       _selectedSubtopicId = null;
@@ -385,8 +413,19 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final familyCategories = _filters?.categories ?? [];
+    final gsPapers = familyCategories.where((c) => c.nodeType == "gs_paper").toList();
     final allSubjects = familyCategories.where((c) => c.nodeType == "subject").toList();
-    final subjects = allSubjects;
+    final subjects = _selectedGsPaperId == null
+        ? allSubjects
+        : allSubjects.where((c) => c.parentId.toString() == _selectedGsPaperId).toList();
+    final allTopics = familyCategories.where((c) => c.nodeType == "topic").toList();
+    final topics = _selectedSubjectId == null
+        ? <CategoryNode>[]
+        : allTopics.where((c) => c.parentId.toString() == _selectedSubjectId).toList();
+    final allSubtopics = familyCategories.where((c) => c.nodeType == "subtopic").toList();
+    final subtopics = _selectedTopicId == null
+        ? <CategoryNode>[]
+        : allSubtopics.where((c) => c.parentId.toString() == _selectedTopicId).toList();
 
     // Filter articles locally based on search query
     final filteredArticles = _articles.where((article) {
@@ -449,6 +488,286 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
             ),
 
             const SliverToBoxAdapter(child: SizedBox.shrink()),
+
+            // 4b. GS Paper Pills Container (mains only)
+            if (gsPapers.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                  child: SizedBox(
+                    height: 34,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: gsPapers.length + 1,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          final isSelected = _selectedGsPaperId == null;
+                          return ChoiceChip(
+                            label: const Text("All Papers"),
+                            selected: isSelected,
+                            selectedColor: const Color(0xFFE11D48),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            labelStyle: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              color: isSelected ? Colors.white : AppColors.ink,
+                            ),
+                            side: BorderSide.none,
+                            onSelected: (val) {
+                              if (val) {
+                                setState(() {
+                                  _selectedGsPaperId = null;
+                                  _selectedSubjectId = null;
+                                  _selectedTopicId = null;
+                                  _selectedSubtopicId = null;
+                                  _currentPage = 1;
+                                });
+                                _loadOnlyArticles();
+                              }
+                            },
+                          );
+                        }
+
+                        final paper = gsPapers[index - 1];
+                        final isSelected = _selectedGsPaperId == paper.id.toString();
+                        return ChoiceChip(
+                          label: Text(paper.name),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFFE11D48),
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          labelStyle: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.ink,
+                          ),
+                          side: BorderSide.none,
+                          onSelected: (val) {
+                            setState(() {
+                              _selectedGsPaperId = val ? paper.id.toString() : null;
+                              _selectedSubjectId = null;
+                              _selectedTopicId = null;
+                              _selectedSubtopicId = null;
+                              _currentPage = 1;
+                            });
+                            _loadOnlyArticles();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+            // 5. Subject Pills Container
+            if (subjects.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+                  child: SizedBox(
+                    height: 38,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: subjects.length + 1,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          final isSelected = _selectedSubjectId == null;
+                          return ChoiceChip(
+                            avatar: Icon(Icons.apps_rounded, size: 14, color: isSelected ? Colors.white : AppColors.muted),
+                            label: const Text("All"),
+                            selected: isSelected,
+                            selectedColor: const Color(0xFF101E60),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            labelStyle: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              color: isSelected ? Colors.white : AppColors.ink,
+                            ),
+                            side: BorderSide.none,
+                            onSelected: (val) {
+                              if (val) {
+                                setState(() {
+                                  _selectedSubjectId = null;
+                                  _selectedTopicId = null;
+                                  _selectedSubtopicId = null;
+                                  _currentPage = 1;
+                                });
+                                _loadOnlyArticles();
+                              }
+                            },
+                          );
+                        }
+
+                        final subject = subjects[index - 1];
+                        final isSelected = _selectedSubjectId == subject.id.toString();
+                        final subjColor = _getSubjectColor(subject.name);
+
+                        return ChoiceChip(
+                          avatar: Icon(
+                            _getSubjectIcon(subject.name),
+                            size: 14,
+                            color: isSelected ? Colors.white : subjColor,
+                          ),
+                          label: Text(subject.name),
+                          selected: isSelected,
+                          selectedColor: subjColor,
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          labelStyle: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.ink,
+                          ),
+                          side: BorderSide.none,
+                          onSelected: (val) {
+                            setState(() {
+                              _selectedSubjectId = val ? subject.id.toString() : null;
+                              _selectedTopicId = null;
+                              _selectedSubtopicId = null;
+                              _currentPage = 1;
+                            });
+                            _loadOnlyArticles();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+            // 5b. Topic Pills Container
+            if (topics.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                  child: SizedBox(
+                    height: 34,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: topics.length + 1,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          final isSelected = _selectedTopicId == null;
+                          return ChoiceChip(
+                            label: const Text("All Topics"),
+                            selected: isSelected,
+                            selectedColor: const Color(0xFF101E60),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            labelStyle: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              color: isSelected ? Colors.white : AppColors.ink,
+                            ),
+                            side: BorderSide.none,
+                            onSelected: (val) {
+                              if (val) {
+                                setState(() {
+                                  _selectedTopicId = null;
+                                  _selectedSubtopicId = null;
+                                  _currentPage = 1;
+                                });
+                                _loadOnlyArticles();
+                              }
+                            },
+                          );
+                        }
+
+                        final topic = topics[index - 1];
+                        final isSelected = _selectedTopicId == topic.id.toString();
+                        return ChoiceChip(
+                          label: Text(topic.name),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFF101E60),
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          labelStyle: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.ink,
+                          ),
+                          side: BorderSide.none,
+                          onSelected: (val) {
+                            setState(() {
+                              _selectedTopicId = val ? topic.id.toString() : null;
+                              _selectedSubtopicId = null;
+                              _currentPage = 1;
+                            });
+                            _loadOnlyArticles();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+            // 5c. Subtopic Pills Container
+            if (subtopics.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+                  child: SizedBox(
+                    height: 34,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: subtopics.length + 1,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          final isSelected = _selectedSubtopicId == null;
+                          return ChoiceChip(
+                            label: const Text("All Subtopics"),
+                            selected: isSelected,
+                            selectedColor: const Color(0xFF101E60),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            labelStyle: GoogleFonts.inter(
+                              fontSize: 10.5,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                              color: isSelected ? Colors.white : AppColors.ink,
+                            ),
+                            side: BorderSide.none,
+                            onSelected: (val) {
+                              if (val) {
+                                setState(() {
+                                  _selectedSubtopicId = null;
+                                  _currentPage = 1;
+                                });
+                                _loadOnlyArticles();
+                              }
+                            },
+                          );
+                        }
+
+                        final subtopic = subtopics[index - 1];
+                        final isSelected = _selectedSubtopicId == subtopic.id.toString();
+                        return ChoiceChip(
+                          label: Text(subtopic.name),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFF101E60),
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          labelStyle: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.ink,
+                          ),
+                          side: BorderSide.none,
+                          onSelected: (val) {
+                            setState(() {
+                              _selectedSubtopicId = val ? subtopic.id.toString() : null;
+                              _currentPage = 1;
+                            });
+                            _loadOnlyArticles();
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
 
             // 3. Sub-toggles
             SliverToBoxAdapter(
@@ -570,85 +889,6 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                 ),
               ),
             ),
-
-
-
-            // 5. Subject Pills Container
-            if (subjects.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-                  child: SizedBox(
-                    height: 38,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: subjects.length + 1,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          final isSelected = _selectedSubjectId == null;
-                          return ChoiceChip(
-                            avatar: Icon(Icons.apps_rounded, size: 14, color: isSelected ? Colors.white : AppColors.muted),
-                            label: const Text("All"),
-                            selected: isSelected,
-                            selectedColor: const Color(0xFF101E60),
-                            backgroundColor: const Color(0xFFF1F5F9),
-                            labelStyle: GoogleFonts.inter(
-                              fontSize: 11.5,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                              color: isSelected ? Colors.white : AppColors.ink,
-                            ),
-                            side: BorderSide.none,
-                            onSelected: (val) {
-                              if (val) {
-                                setState(() {
-                                  _selectedSubjectId = null;
-                                  _selectedTopicId = null;
-                                  _selectedSubtopicId = null;
-                                  _currentPage = 1;
-                                });
-                                _loadOnlyArticles();
-                              }
-                            },
-                          );
-                        }
-
-                        final subject = subjects[index - 1];
-                        final isSelected = _selectedSubjectId == subject.id.toString();
-                        final subjColor = _getSubjectColor(subject.name);
-
-                        return ChoiceChip(
-                          avatar: Icon(
-                            _getSubjectIcon(subject.name),
-                            size: 14,
-                            color: isSelected ? Colors.white : subjColor,
-                          ),
-                          label: Text(subject.name),
-                          selected: isSelected,
-                          selectedColor: subjColor,
-                          backgroundColor: const Color(0xFFF1F5F9),
-                          labelStyle: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                            color: isSelected ? Colors.white : AppColors.ink,
-                          ),
-                          side: BorderSide.none,
-                          onSelected: (val) {
-                            setState(() {
-                              _selectedSubjectId = val ? subject.id.toString() : null;
-                              _selectedTopicId = null;
-                              _selectedSubtopicId = null;
-                              _currentPage = 1;
-                            });
-                            _loadOnlyArticles();
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
 
             // 6. Total Count Header
             SliverToBoxAdapter(

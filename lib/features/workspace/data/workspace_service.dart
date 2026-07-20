@@ -25,6 +25,56 @@ class WorkspaceService {
     throw Exception('Invalid forks list response');
   }
 
+  // Fetch a single saved fork with its live source-article connections and annotations
+  Future<StudentFork> getFork(int id) async {
+    final response = await apiClient.get('/api/v1/current-affairs/me/forks/$id');
+    if (response is Map<String, dynamic>) {
+      return StudentFork.fromJson(response);
+    }
+    throw Exception('Invalid fork detail response');
+  }
+
+  // Highlight CRUD
+  Future<StudentHighlight> createHighlight(int forkId, {required TextAnchor anchor, required String color, String? note}) async {
+    final response = await apiClient.post('/api/v1/current-affairs/me/forks/$forkId/highlights', {
+      'anchor_json': anchor.toJson(),
+      'color': color,
+      if (note != null) 'note': note,
+    });
+    if (response is Map<String, dynamic>) {
+      return StudentHighlight.fromJson(response);
+    }
+    throw Exception('Could not save highlight');
+  }
+
+  Future<void> updateHighlight(int id, {String? note}) async {
+    await apiClient.patch('/api/v1/current-affairs/me/highlights/$id', {'note': note});
+  }
+
+  Future<void> deleteHighlight(int id) async {
+    await apiClient.delete('/api/v1/current-affairs/me/highlights/$id');
+  }
+
+  // Note CRUD
+  Future<StudentNote> createNote(int forkId, {required TextAnchor anchor, required String note}) async {
+    final response = await apiClient.post('/api/v1/current-affairs/me/forks/$forkId/notes', {
+      'anchor_json': anchor.toJson(),
+      'note': note,
+    });
+    if (response is Map<String, dynamic>) {
+      return StudentNote.fromJson(response);
+    }
+    throw Exception('Could not save note');
+  }
+
+  Future<void> updateNote(int id, {required String note}) async {
+    await apiClient.patch('/api/v1/current-affairs/me/notes/$id', {'note': note});
+  }
+
+  Future<void> deleteNote(int id) async {
+    await apiClient.delete('/api/v1/current-affairs/me/notes/$id');
+  }
+
   // Fetch student collections/repositories folders list
   Future<List<StudentCollection>> getCollections() async {
     final response = await apiClient.get('/api/v1/current-affairs/me/collections');

@@ -40,6 +40,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> {
   String _selectedHubFilterMode = "month";
 
   camodels.ArticleFilters? _filters;
+  String? _selectedGsPaperId;
   String? _selectedSubjectId;
   String? _selectedTopicId;
   String? _selectedSubtopicId;
@@ -81,6 +82,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> {
       final filters = await _articleService.getFilters(_selectedHubKind, _selectedHubFamily);
       setState(() {
         _filters = filters;
+        _selectedGsPaperId = null;
         _selectedSubjectId = null;
         _selectedTopicId = null;
         _selectedSubtopicId = null;
@@ -199,7 +201,11 @@ class _BulkImportDialogState extends State<BulkImportDialog> {
   @override
   Widget build(BuildContext context) {
     final familyCategories = _filters?.categories ?? [];
-    final subjects = familyCategories.where((c) => c.nodeType == "subject").toList();
+    final gsPapers = familyCategories.where((c) => c.nodeType == "gs_paper").toList();
+    final allSubjects = familyCategories.where((c) => c.nodeType == "subject").toList();
+    final subjects = _selectedGsPaperId == null
+        ? allSubjects
+        : allSubjects.where((c) => c.parentId?.toString() == _selectedGsPaperId).toList();
     final topics = familyCategories.where((c) => c.nodeType == "topic" && c.parentId?.toString() == _selectedSubjectId).toList();
     final subtopics = familyCategories.where((c) => c.nodeType == "subtopic" && c.parentId?.toString() == _selectedTopicId).toList();
 
@@ -265,6 +271,27 @@ class _BulkImportDialogState extends State<BulkImportDialog> {
                   child: Center(child: CircularProgressIndicator(strokeWidth: 2.5)),
                 )
               else ...[
+                if (gsPapers.isNotEmpty) ...[
+                  DropdownButtonFormField<String?>(
+                    value: _selectedGsPaperId,
+                    hint: const Text("GS Paper", style: TextStyle(fontSize: 11.5)),
+                    decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6)),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text("All GS Papers", style: TextStyle(fontSize: 11.5))),
+                      ...gsPapers.map((g) => DropdownMenuItem(value: g.id.toString(), child: Text(g.name, style: const TextStyle(fontSize: 11.5), overflow: TextOverflow.ellipsis))),
+                    ],
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedGsPaperId = val;
+                        _selectedSubjectId = null;
+                        _selectedTopicId = null;
+                        _selectedSubtopicId = null;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
                 // Subject dropdown filter
                 Row(
                   children: [

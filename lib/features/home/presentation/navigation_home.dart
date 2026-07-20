@@ -34,18 +34,17 @@ class NavigationHomeState extends State<NavigationHome> {
     ];
   }
 
-  void changeTab(int index, {String? subjectId}) {
+  void changeTab(int index, {String? subjectName}) {
     setState(() {
       _currentIndex = index;
     });
     if (index == 1) {
-      // Small delay to ensure the widget is built and the state is ready
       Future.delayed(const Duration(milliseconds: 50), () {
-        prelimsKey.currentState?.applyExternalFilters(subjectId: subjectId);
+        prelimsKey.currentState?.applyExternalFilters(subjectName: subjectName);
       });
     } else if (index == 2) {
       Future.delayed(const Duration(milliseconds: 50), () {
-        mainsKey.currentState?.applyExternalFilters(subjectId: subjectId);
+        mainsKey.currentState?.applyExternalFilters(subjectName: subjectName);
       });
     }
   }

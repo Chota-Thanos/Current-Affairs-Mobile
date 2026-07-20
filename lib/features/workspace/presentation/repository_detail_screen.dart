@@ -3,9 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/export_pdf.dart';
+import '../../../../core/utils/html_to_markdown.dart';
+import '../../../../core/utils/text_anchor.dart';
 import '../../current_affairs/presentation/article_detail_screen.dart';
 import '../data/workspace_service.dart';
 import '../models/workspace_models.dart';
+import 'fork_reader_screen.dart';
 import 'widgets/own_article_dialog.dart';
 import 'widgets/bulk_import_dialog.dart';
 import 'widgets/flashcard_card_widget.dart';
@@ -38,6 +42,10 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
   // Flashcards state
   bool _flashcardsActive = false;
   int _activeFlashcardIndex = 0;
+
+  // PDF export state
+  int? _downloadingItemId;
+  bool _downloadingAll = false;
 
   // Edit notes states
   final Map<int, bool> _editingNotes = {}; // Key: itemId, Value: isEditing
@@ -322,6 +330,52 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
       final normalized = t.trim().toLowerCase();
       return normalized.isNotEmpty && !systemTags.contains(normalized);
     }).toList();
+  }
+
+  String? _watermarkText() {
+    final apiClient = Provider.of<ApiClient>(context, listen: false);
+    final email = apiClient.user?['email'] as String?;
+    return (email != null && email.isNotEmpty) ? 'Personal copy - $email' : null;
+  }
+
+  PdfSection _itemToPdfSection(StudentCollectionItem item) {
+    return PdfSection(
+      title: _itemTitle(item),
+      tags: _itemTags(item),
+      personalNote: _itemNote(item).isEmpty ? null : _itemNote(item),
+      bodyText: markdownToPlainText(htmlToMarkdown(_itemBody(item))),
+    );
+  }
+
+  Future<void> _downloadItemPdf(StudentCollectionItem item) async {
+    setState(() => _downloadingItemId = item.id);
+    try {
+      final section = _itemToPdfSection(item);
+      final watermark = _watermarkText();
+      await exportNotesPdf(
+        [section],
+        section.title,
+        watermarkText: watermark ?? 'Personal copy - do not redistribute',
+      );
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not generate the PDF: $e')));
+    } finally {
+      if (mounted) setState(() => _downloadingItemId = null);
+    }
+  }
+
+  Future<void> _downloadRepositoryPdf(StudentCollectionDetail repo, List<StudentCollectionItem> items) async {
+    if (items.isEmpty) return;
+    setState(() => _downloadingAll = true);
+    try {
+      final sections = items.map(_itemToPdfSection).toList();
+      final watermark = _watermarkText();
+      await exportNotesPdf(sections, repo.name, watermarkText: watermark ?? 'Personal copy - do not redistribute');
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not generate the PDF: $e')));
+    } finally {
+      if (mounted) setState(() => _downloadingAll = false);
+    }
   }
 
 
@@ -999,6 +1053,14 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
                   ? null
                   : () => _showPrintSheetDialog(filteredItems),
             ),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+              label: Text(_downloadingAll ? "PREPARING..." : "DOWNLOAD PDF"),
+              onPressed: filteredItems.isEmpty || _downloadingAll
+                  ? null
+                  : () => _downloadRepositoryPdf(repo, filteredItems),
+            ),
           ],
         ),
       ),
@@ -1386,6 +1448,27 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
                     });
                   },
                   active: isEditingCopy,
+                ),
+              if (item.fork != null)
+                _buildActionChip(
+                  icon: Icons.border_color_rounded,
+                  label: "Highlight & Annotate",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ForkReaderScreen(forkId: item.fork!.id)),
+                    ).then((_) => _loadRepositoryDetail());
+                  },
+                  active: false,
+                ),
+              if (item.fork != null)
+                _buildActionChip(
+                  icon: Icons.file_download_outlined,
+                  label: _downloadingItemId == item.id ? "Preparing..." : "Download PDF",
+                  onTap: () {
+                    if (_downloadingItemId != item.id) _downloadItemPdf(item);
+                  },
+                  active: false,
                 ),
               if (item.studentArticle != null)
                 _buildActionChip(

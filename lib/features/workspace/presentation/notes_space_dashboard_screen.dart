@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/export_pdf.dart';
+import '../../../../core/utils/html_to_markdown.dart';
+import '../../../../core/utils/text_anchor.dart';
 
 import '../../current_affairs/presentation/article_detail_screen.dart';
 import '../data/workspace_service.dart';
@@ -38,6 +41,9 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
   // Add suggested article states
   int? _addingSuggestedId;
   String? _selectedSuggestRepoId;
+
+  // Master PDF export state
+  bool _downloadingAllNotes = false;
 
   @override
   void initState() {
@@ -83,6 +89,54 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
         _error = e.toString().replaceFirst('Exception: ', '');
         _loading = false;
       });
+    }
+  }
+
+  Future<void> _downloadAllNotes() async {
+    setState(() => _downloadingAllNotes = true);
+    try {
+      final forks = await _service.getForks(limit: 200);
+      final ownArticles = await _service.getPersonalArticles(limit: 100);
+
+      final forkSections = forks.map((fork) {
+        final body = fork.forkedBody ?? fork.masterArticle?.body ?? '';
+        final repoLabel = fork.collectionNames.isNotEmpty ? 'Repository: ${fork.collectionNames.join(", ")}' : 'Repository: Unfiled';
+        final kindLabel = fork.masterArticle?.contentKind.replaceAll('_', ' ') ?? '';
+        return PdfSection(
+          title: fork.forkedTitle ?? fork.masterArticle?.title ?? 'Article #${fork.masterArticleId}',
+          meta: kindLabel.isNotEmpty ? '$repoLabel · $kindLabel' : repoLabel,
+          tags: fork.personalTags,
+          personalNote: (fork.personalSummary?.isNotEmpty ?? false) ? fork.personalSummary : null,
+          bodyText: markdownToPlainText(htmlToMarkdown(body)),
+        );
+      }).toList();
+
+      final ownSections = ownArticles.map((article) {
+        return PdfSection(
+          title: article.title,
+          meta: 'Repository: My own articles',
+          tags: article.personalTags,
+          bodyText: markdownToPlainText(htmlToMarkdown(article.body)),
+        );
+      }).toList();
+
+      final allSections = [...forkSections, ...ownSections];
+      if (allSections.isEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nothing to export yet - save or write an article first.')));
+        return;
+      }
+
+      final apiClient = Provider.of<ApiClient>(context, listen: false);
+      final email = apiClient.user?['email'] as String?;
+      await exportNotesPdf(
+        allSections,
+        'My Notes Space',
+        watermarkText: (email != null && email.isNotEmpty) ? 'Personal copy - $email' : 'Personal copy - do not redistribute',
+      );
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not generate the PDF: $e')));
+    } finally {
+      if (mounted) setState(() => _downloadingAllNotes = false);
     }
   }
 
@@ -328,6 +382,22 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: _downloadingAllNotes
+                  ? const SizedBox(height: 12, width: 12, child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white))
+                  : const Icon(Icons.file_download_outlined, size: 14, color: Colors.white),
+              label: Text(_downloadingAllNotes ? 'Preparing PDF...' : 'Download all notes', style: const TextStyle(fontSize: 12, color: Colors.white)),
+              onPressed: _downloadingAllNotes ? null : _downloadAllNotes,
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.white38),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
           ),
         ],
       ),

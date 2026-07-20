@@ -14,7 +14,7 @@ import '../../workspace/models/workspace_models.dart';
 import 'onboarding_tour_widget.dart';
 
 class DashboardHomeScreen extends StatefulWidget {
-  final Function(int index, {String? subjectId}) onNavigate;
+  final Function(int index, {String? subjectName}) onNavigate;
 
   const DashboardHomeScreen({
     super.key,
@@ -36,13 +36,13 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
   List<ArticleSummary> _highlightArticles = [];
   List<ArticleSummary> _latestUpdates = [];
   StudentFork? _continueReadingFork;
+  List<CategoryNode> _prelimsSubjects = [];
 
   // Onboarding Guided Tour Keys & States
   final GlobalKey _keyBanner = GlobalKey();
   final GlobalKey _keySubjects = GlobalKey();
   final GlobalKey _keyHighlights = GlobalKey();
   final GlobalKey _keyContinueReading = GlobalKey();
-  final GlobalKey _keyProgress = GlobalKey();
 
   bool _showTour = false;
   bool _dismissedTourBanner = false;
@@ -70,9 +70,6 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
       case 'continue-reading':
       case 'tour-continue-reading':
         return _keyContinueReading;
-      case 'progress':
-      case 'tour-progress':
-        return _keyProgress;
       default:
         return null;
     }
@@ -168,6 +165,12 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
         limit: 1,
       );
 
+      // 4. Fetch real prelims subjects for the "Explore by subject" row
+      final prelimsFilters = await _articleService.getFilters('daily_current_affairs', 'prelims');
+      final realSubjects = prelimsFilters.categories
+          .where((c) => c.nodeType == 'subject' && !c.name.toLowerCase().startsWith('test current affairs'))
+          .toList();
+
       if (!mounted) return;
       setState(() {
         if (dashboard != null && dashboard.continueReading != null && dashboard.continueReading.isNotEmpty) {
@@ -177,10 +180,12 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
         }
 
         _highlightArticles = highlightRes['items'] as List<ArticleSummary>;
-        
+
         final editorialItems = updatesRes['items'] as List<ArticleSummary>;
         final notesItems = notesRes['items'] as List<ArticleSummary>;
         _latestUpdates = [...editorialItems, ...notesItems];
+
+        _prelimsSubjects = realSubjects;
 
         _loading = false;
       });
@@ -191,6 +196,24 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
         _loading = false;
       });
     }
+  }
+
+  String _todayLabel() {
+    final now = DateTime.now();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return "${monthNames[now.month - 1]} ${now.day}, ${now.year}";
+  }
+
+  String _relativeTime(String? isoDate) {
+    if (isoDate == null) return "";
+    final date = DateTime.tryParse(isoDate);
+    if (date == null) return "";
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 60) return "${diff.inMinutes.clamp(0, 59)}m ago";
+    if (diff.inHours < 24) return "${diff.inHours}h ago";
+    if (diff.inDays < 7) return "${diff.inDays}d ago";
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return "${monthNames[date.month - 1]} ${date.day}";
   }
 
   String _getGreeting() {
@@ -236,14 +259,8 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
     return AppColors.ink;
   }
 
-  void _onSubjectTapped(String subjectName) {
-    // Subject filter mapping mock IDs
-    String mockSubjectId = "1"; // Default fallbacks
-    if (subjectName == "Polity") mockSubjectId = "polity";
-    if (subjectName == "Economy") mockSubjectId = "economy";
-    if (subjectName == "History") mockSubjectId = "history";
-    if (subjectName == "Geography") mockSubjectId = "geography";
-
+  void _onSubjectTapped(CategoryNode subject) {
+    final subjectName = subject.name;
     showDialog(
       context: context,
       builder: (context) {
@@ -255,14 +272,14 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                widget.onNavigate(1, subjectId: mockSubjectId); // 1 = Prelims
+                widget.onNavigate(1, subjectName: subjectName); // 1 = Prelims
               },
               child: const Text("PRELIMS"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                widget.onNavigate(2, subjectId: mockSubjectId); // 2 = Mains
+                widget.onNavigate(2, subjectName: subjectName); // 2 = Mains
               },
               child: const Text("MAINS"),
             ),
@@ -330,7 +347,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
 
                         // 3. DAILY HIGHLIGHTS
                         _buildSectionHeader("DAILY HIGHLIGHTS", rightWidget: Text(
-                          "Oct 24, 2024",
+                          _todayLabel(),
                           style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted),
                         )),
                         const SizedBox(height: 10),
@@ -349,43 +366,10 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // 5. PRELIMS FOCUS
-                        Row(
-                          children: [
-                            Expanded(child: _buildSectionHeader("PRELIMS FOCUS")),
-                            GestureDetector(
-                              onTap: () => widget.onNavigate(1), // Go to Prelims
-                              child: Text(
-                                "View All",
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF101E60),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        _buildPrelimsFocusSection(),
-                        const SizedBox(height: 24),
-
-                        // 6. LATEST UPDATES
+                        // 5. LATEST UPDATES
                         _buildSectionHeader("LATEST UPDATES"),
                         const SizedBox(height: 10),
                         _buildLatestUpdatesList(),
-                        const SizedBox(height: 24),
-
-                        // 7. GS PAPER PROGRESS
-                        _buildSectionHeader("GS PAPER PROGRESS", rightWidget: Text(
-                          "Overall: 42%",
-                          style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppColors.muted),
-                        )),
-                        const SizedBox(height: 12),
-                        Container(
-                          key: _keyProgress,
-                          child: _buildGsProgressList(),
-                        ),
                         const SizedBox(height: 24),
 
                         // 8. RETENTION TIP
@@ -401,33 +385,27 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
               : [
                   TourStep(
                     targetKey: _keyBanner,
-                    badge: "Step 1 of 5: Member Center",
+                    badge: "Step 1 of 4: Member Center",
                     title: "Subscription Status Tracker",
                     body: "View your active daily reading tier, validation tokens, and plan tier limits here at the top of your dashboard.",
                   ),
                   TourStep(
                     targetKey: _keySubjects,
-                    badge: "Step 2 of 5: Subject Explorer",
+                    badge: "Step 2 of 4: Subject Explorer",
                     title: "Explore UPSC Syllabus Subjects",
                     body: "Tap any subject icon to jump directly into category-filtered Prelims mock tests or Mains writing boards.",
                   ),
                   TourStep(
                     targetKey: _keyHighlights,
-                    badge: "Step 3 of 5: Daily News Feed",
+                    badge: "Step 3 of 4: Daily News Feed",
                     title: "Curated Current Affairs Editorials",
                     body: "Read unlimited daily current affairs analysis. Tap any editorial card to open the reader and tag revision notes.",
                   ),
                   TourStep(
                     targetKey: _keyContinueReading,
-                    badge: "Step 4 of 5: Active Prep Tracker",
+                    badge: "Step 4 of 4: Active Prep Tracker",
                     title: "Resume Where You Left Off",
                     body: "Instantly resume reading your last opened article or view notes repositories that you modified recently.",
-                  ),
-                  TourStep(
-                    targetKey: _keyProgress,
-                    badge: "Step 5 of 5: Syllabus Coverage",
-                    title: "GS Paper Completion Progress",
-                    body: "Tracks your overall prep coverage across GS Papers 1 to 4 based on completed tests and notes count.",
                   ),
                 ],
           onClose: () => setState(() => _showTour = false),
@@ -459,19 +437,30 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
   }
 
   Widget _buildExploreSubjectsRow() {
-    final subjects = ["Polity", "Economy", "History", "Geography", "Science & Tech", "Environment"];
+    if (_prelimsSubjects.isEmpty) {
+      return Container(
+        height: 76,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          "No subjects available yet.",
+          style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+        ),
+      );
+    }
+
     return SizedBox(
       height: 76,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: subjects.length,
+        itemCount: _prelimsSubjects.length,
         separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (context, index) {
-          final sName = subjects[index];
+          final subject = _prelimsSubjects[index];
+          final sName = subject.name;
           final bgColor = _getSubjectColor(sName);
           final txtColor = _getSubjectTextColor(sName);
           return GestureDetector(
-            onTap: () => _onSubjectTapped(sName),
+            onTap: () => _onSubjectTapped(subject),
             child: Column(
               children: [
                 CircleAvatar(
@@ -752,99 +741,6 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
     );
   }
 
-  Widget _buildPrelimsFocusSection() {
-    return Row(
-      children: [
-        // Daily Quiz Card
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: const Color(0xFFEEF2F6),
-                  child: Text("❓", style: GoogleFonts.inter(fontSize: 12)),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Daily Quiz #242",
-                  style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.ink),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "10 Questions • Mixed Subjects",
-                  style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.muted),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () => widget.onNavigate(4), // Go to AI helper / quiz
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF101E60),
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    minimumSize: const Size.fromHeight(30),
-                  ),
-                  child: Text("ATTEMPT", style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Quick Facts Card
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: const Color(0xFFFFF7ED),
-                  child: Text("📝", style: GoogleFonts.inter(fontSize: 12)),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Quick Facts: Ramsar",
-                  style: GoogleFonts.plusJakartaSans(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.ink),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "5 New Sites added in 2024",
-                  style: GoogleFonts.inter(fontSize: 10.5, color: AppColors.muted),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: () => widget.onNavigate(1), // Go to Prelims feed
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF101E60),
-                    side: const BorderSide(color: Color(0xFFDDE6F0)),
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    minimumSize: const Size.fromHeight(30),
-                  ),
-                  child: Text("READ", style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildLatestUpdatesList() {
     if (_latestUpdates.isEmpty) {
       return Container(
@@ -887,7 +783,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                 ),
                 const Spacer(),
                 Text(
-                  "2h ago",
+                  _relativeTime(art.publicationDate),
                   style: GoogleFonts.inter(fontSize: 9, color: AppColors.muted),
                 ),
               ],
@@ -916,97 +812,6 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
         );
       }).toList(),
     );
-  }
-
-  Widget _buildGsProgressList() {
-    final papers = [
-      {"name": "GS Paper I", "progress": 0.45},
-      {"name": "GS Paper II", "progress": 0.72},
-      {"name": "GS Paper III", "progress": 0.30},
-      {"name": "GS Paper IV", "progress": 0.15},
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        children: papers.asMap().entries.map((entry) {
-          final idx = entry.key;
-          final item = entry.value;
-          final isLast = idx == papers.length - 1;
-          final progressPercent = ((item["progress"] as double) * 100).round();
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 15,
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      child: Text(
-                        _romanNumeral(idx + 1),
-                        style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.ink),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                item["name"] as String,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.ink,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                "$progressPercent%",
-                                style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.muted),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(2),
-                            child: LinearProgressIndicator(
-                              value: item["progress"] as double,
-                              backgroundColor: const Color(0xFFF1F5F9),
-                              color: const Color(0xFF101E60),
-                              minHeight: 4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.muted),
-                  ],
-                ),
-              ),
-              if (!isLast) const Divider(height: 1, color: Color(0xFFF1F5F9)),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  String _romanNumeral(int number) {
-    if (number == 1) return "I";
-    if (number == 2) return "II";
-    if (number == 3) return "III";
-    if (number == 4) return "IV";
-    return "";
   }
 
   Widget _buildRetentionTipCard() {

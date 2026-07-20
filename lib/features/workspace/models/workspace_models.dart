@@ -3,6 +3,7 @@ import '../../current_affairs/models/article_models.dart';
 class StudentMasterArticle {
   final int id;
   final String contentKind;
+  final String articleRole;
   final String title;
   final String slug;
   final String body;
@@ -11,10 +12,16 @@ class StudentMasterArticle {
   final String? sourceUrl;
   final String? publicationDate;
   final List<String> instituteTags;
+  final List<ArticleSection> sections;
+  final List<OutgoingRelation> outgoingRelations;
+  final List<IncomingRelation> incomingRelations;
+  final int appearanceCount;
+  final List<ArticleUpdateEntry> updates;
 
   StudentMasterArticle({
     required this.id,
     required this.contentKind,
+    this.articleRole = 'event',
     required this.title,
     required this.slug,
     required this.body,
@@ -23,12 +30,18 @@ class StudentMasterArticle {
     this.sourceUrl,
     this.publicationDate,
     required this.instituteTags,
+    this.sections = const [],
+    this.outgoingRelations = const [],
+    this.incomingRelations = const [],
+    this.appearanceCount = 0,
+    this.updates = const [],
   });
 
   factory StudentMasterArticle.fromJson(Map<String, dynamic> json) {
     return StudentMasterArticle(
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       contentKind: json['content_kind'] ?? '',
+      articleRole: json['article_role'] ?? 'event',
       title: json['title'] ?? '',
       slug: json['slug'] ?? '',
       body: json['body'] ?? '',
@@ -37,6 +50,90 @@ class StudentMasterArticle {
       sourceUrl: json['source_url'] as String?,
       publicationDate: json['publication_date'] as String?,
       instituteTags: (json['institute_tags'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      sections: (json['sections'] as List?)?.map((e) => ArticleSection.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      outgoingRelations: (json['outgoing_relations'] as List?)?.map((e) => OutgoingRelation.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      incomingRelations: (json['incoming_relations'] as List?)?.map((e) => IncomingRelation.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      appearanceCount: int.tryParse(json['appearance_count']?.toString() ?? '') ?? 0,
+      updates: (json['updates'] as List?)?.map((e) => ArticleUpdateEntry.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+    );
+  }
+}
+
+class TextAnchor {
+  final String quote;
+  final String prefix;
+  final String suffix;
+  final int start;
+
+  TextAnchor({
+    required this.quote,
+    required this.prefix,
+    required this.suffix,
+    required this.start,
+  });
+
+  factory TextAnchor.fromJson(Map<String, dynamic> json) {
+    return TextAnchor(
+      quote: json['quote'] ?? '',
+      prefix: json['prefix'] ?? '',
+      suffix: json['suffix'] ?? '',
+      start: int.tryParse(json['start']?.toString() ?? '') ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'quote': quote,
+        'prefix': prefix,
+        'suffix': suffix,
+        'start': start,
+      };
+}
+
+class StudentHighlight {
+  final int id;
+  final int forkId;
+  final TextAnchor anchor;
+  final String color;
+  final String? note;
+
+  StudentHighlight({
+    required this.id,
+    required this.forkId,
+    required this.anchor,
+    required this.color,
+    this.note,
+  });
+
+  factory StudentHighlight.fromJson(Map<String, dynamic> json) {
+    return StudentHighlight(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      forkId: int.tryParse(json['fork_id']?.toString() ?? '') ?? 0,
+      anchor: TextAnchor.fromJson((json['anchor_json'] as Map?)?.cast<String, dynamic>() ?? {}),
+      color: json['color'] ?? 'yellow',
+      note: json['note'] as String?,
+    );
+  }
+}
+
+class StudentNote {
+  final int id;
+  final int forkId;
+  final TextAnchor anchor;
+  final String note;
+
+  StudentNote({
+    required this.id,
+    required this.forkId,
+    required this.anchor,
+    required this.note,
+  });
+
+  factory StudentNote.fromJson(Map<String, dynamic> json) {
+    return StudentNote(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      forkId: int.tryParse(json['fork_id']?.toString() ?? '') ?? 0,
+      anchor: TextAnchor.fromJson((json['anchor_json'] as Map?)?.cast<String, dynamic>() ?? {}),
+      note: json['note'] ?? '',
     );
   }
 }
@@ -56,6 +153,8 @@ class StudentFork {
   final StudentMasterArticle? masterArticle;
   final int progressPercent;
   final int readingSeconds;
+  final List<StudentHighlight> highlights;
+  final List<StudentNote> notes;
 
   StudentFork({
     required this.id,
@@ -72,6 +171,8 @@ class StudentFork {
     this.masterArticle,
     required this.progressPercent,
     required this.readingSeconds,
+    this.highlights = const [],
+    this.notes = const [],
   });
 
   factory StudentFork.fromJson(Map<String, dynamic> json) {
@@ -108,6 +209,8 @@ class StudentFork {
           : null,
       progressPercent: progVal,
       readingSeconds: readSecVal,
+      highlights: (json['highlights'] as List?)?.map((e) => StudentHighlight.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      notes: (json['notes'] as List?)?.map((e) => StudentNote.fromJson(e as Map<String, dynamic>)).toList() ?? [],
     );
   }
 }
