@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/premium_lock_overlay.dart';
@@ -151,6 +152,33 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         _markingRead = false;
       });
     }
+  }
+
+  void _handleBodyLinkTap(String text, String? href, String title) {
+    if (href == null || href.isEmpty) return;
+
+    final articleSlugMatch = RegExp(r'/current-affairs/articles/([a-z0-9-]+)').firstMatch(href);
+    if (articleSlugMatch != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ArticleDetailScreen(slug: articleSlugMatch.group(1)!),
+        ),
+      );
+      return;
+    }
+
+    final uri = Uri.tryParse(href);
+    if (uri != null) {
+      launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  String _formatUpdateDate(String value) {
+    final date = DateTime.tryParse(value);
+    if (date == null) return value;
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return "${date.day.toString().padLeft(2, '0')} ${monthNames[date.month - 1]} ${date.year}";
   }
 
   void _triggerSnackbar(String msg, Color bg) {
@@ -319,6 +347,26 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                   ),
                                 ),
                               ),
+                              if (article.articleRole == "concept") ...[
+                                const SizedBox(width: 6),
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.berry.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    child: Text(
+                                      "CONCEPT",
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppColors.berry,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                               if (article.category != null) ...[
                                 const SizedBox(width: 6),
                                 DecoratedBox(
@@ -428,6 +476,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                               data: htmlToMarkdown(article.body),
                               inlineSyntaxes: [HighlightSyntax()],
                               builders: {'highlight': HighlightBuilder()},
+                              onTapLink: _handleBodyLinkTap,
                               styleSheet: MarkdownStyleSheet(
                                 p: GoogleFonts.inter(fontSize: 14.5, color: AppColors.ink, height: 1.5, fontWeight: FontWeight.w400),
                               ),
@@ -453,6 +502,43 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                 ),
                               ],
                             )),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Updates timeline (concept articles)
+                  if (article.updates.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      "Updates",
+                      style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink),
+                    ),
+                    const SizedBox(height: 10),
+                    DecoratedBox(
+                      decoration: AppTheme.cardDecoration,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (int i = 0; i < article.updates.length; i++) ...[
+                              if (i > 0) ...[
+                                const SizedBox(height: 14),
+                                const Divider(height: 1, color: AppColors.line),
+                                const SizedBox(height: 14),
+                              ],
+                              Text(
+                                _formatUpdateDate(article.updates[i].createdAt),
+                                style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.berry),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                article.updates[i].body,
+                                style: GoogleFonts.inter(fontSize: 13, color: AppColors.ink, height: 1.5),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -488,6 +574,44 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => ArticleDetailScreen(slug: rel.targetArticle.slug),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+
+                  // Appears in (incoming relations) list
+                  if (article.incomingRelations.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      "Appears in ${article.appearanceCount} article${article.appearanceCount == 1 ? '' : 's'}",
+                      style: GoogleFonts.plusJakartaSans(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.ink),
+                    ),
+                    const SizedBox(height: 10),
+                    ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: article.incomingRelations.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final rel = article.incomingRelations[index];
+                        return DecoratedBox(
+                          decoration: AppTheme.cardDecoration,
+                          child: ListTile(
+                            dense: true,
+                            title: Text(
+                              rel.label ?? rel.sourceArticle.title,
+                              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.ink),
+                            ),
+                            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.civic),
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ArticleDetailScreen(slug: rel.sourceArticle.slug),
                                 ),
                               );
                             },

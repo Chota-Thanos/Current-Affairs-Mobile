@@ -49,10 +49,11 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
   String _selectedHubKind = "daily_current_affairs";
   String _selectedHubFamily = "prelims";
   String _selectedHubFilterMode = "month"; // month vs year
+  String _selectedHubRole = "event"; // event vs concept
 
   // Main Tabs State
   int _selectedMainTab = 0; // 0: Prelims, 1: Mains
-  int _selectedPrelimsSubTab = 0; // 0: Daily News, 1: Prelims PYQs
+  int _selectedPrelimsSubTab = 0; // 0: Daily News, 1: Prelims PYQs, 2: Concepts
   int _selectedMainsSubTab = 0; // 0: Summaries, 1: Mains Notes, 2: Mains PYQs
 
   // Filters
@@ -111,6 +112,16 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
       'icon': '⚡',
     },
     {
+      'path': 'concepts',
+      'label': 'Prelims Concepts',
+      'shortLabel': 'Concepts',
+      'kind': 'daily_current_affairs',
+      'family': 'prelims',
+      'filterMode': 'month',
+      'role': 'concept',
+      'icon': '🧩',
+    },
+    {
       'path': 'mains-pyq',
       'label': 'Mains PYQ',
       'shortLabel': 'Mains PYQ',
@@ -161,6 +172,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
       final categoryId = _selectedSubtopicId ?? _selectedTopicId ?? _selectedSubjectId;
       final response = await _service.getArticles(
         contentKind: _selectedHubKind,
+        articleRole: _selectedHubRole,
         category: categoryId,
         month: _selectedHubFilterMode == "month" ? _selectedMonth : null,
         year: _selectedHubFilterMode == "year" ? _selectedYear : null,
@@ -192,6 +204,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
       final categoryId = _selectedSubtopicId ?? _selectedTopicId ?? _selectedSubjectId;
       final response = await _service.getArticles(
         contentKind: _selectedHubKind,
+        articleRole: _selectedHubRole,
         category: categoryId,
         month: _selectedHubFilterMode == "month" ? _selectedMonth : null,
         year: _selectedHubFilterMode == "year" ? _selectedYear : null,
@@ -225,8 +238,10 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
     if (_selectedMainTab == 0) {
       if (_selectedPrelimsSubTab == 0) {
         hub = _hubs.firstWhere((h) => h['path'] == 'daily-news');
-      } else {
+      } else if (_selectedPrelimsSubTab == 1) {
         hub = _hubs.firstWhere((h) => h['path'] == 'prelims-pyq');
+      } else {
+        hub = _hubs.firstWhere((h) => h['path'] == 'concepts');
       }
     } else {
       if (_selectedMainsSubTab == 0) {
@@ -242,7 +257,8 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
       _selectedHubKind = hub['kind']!;
       _selectedHubFamily = hub['family']!;
       _selectedHubFilterMode = hub['filterMode']!;
-      
+      _selectedHubRole = hub['role'] ?? 'event';
+
       // Reset filters
       _selectedSubjectId = null;
       _selectedTopicId = null;
@@ -473,6 +489,24 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                         onSelected: (val) {
                           if (val) {
                             setState(() => _selectedPrelimsSubTab = 1);
+                            _updateHubFromTabs();
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text("Concepts"),
+                        selected: _selectedPrelimsSubTab == 2,
+                        selectedColor: const Color(0xFF101E60).withValues(alpha: 0.08),
+                        backgroundColor: Colors.white,
+                        labelStyle: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: _selectedPrelimsSubTab == 2 ? FontWeight.bold : FontWeight.normal,
+                          color: _selectedPrelimsSubTab == 2 ? const Color(0xFF101E60) : AppColors.muted,
+                        ),
+                        onSelected: (val) {
+                          if (val) {
+                            setState(() => _selectedPrelimsSubTab = 2);
                             _updateHubFromTabs();
                           }
                         },

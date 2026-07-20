@@ -108,6 +108,7 @@ class ArticleSummary {
   final int id;
   final String contentFamily;
   final String contentKind;
+  final String articleRole;
   final String title;
   final String slug;
   final String body;
@@ -123,6 +124,7 @@ class ArticleSummary {
     required this.id,
     required this.contentFamily,
     required this.contentKind,
+    required this.articleRole,
     required this.title,
     required this.slug,
     required this.body,
@@ -140,6 +142,7 @@ class ArticleSummary {
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       contentFamily: json['content_family'] ?? '',
       contentKind: json['content_kind'] ?? '',
+      articleRole: json['article_role'] ?? 'event',
       title: json['title'] ?? '',
       slug: json['slug'] ?? '',
       body: json['body'] ?? '',
@@ -154,10 +157,31 @@ class ArticleSummary {
   }
 }
 
+class ArticleUpdateEntry {
+  final int id;
+  final String body;
+  final String createdAt;
+
+  ArticleUpdateEntry({
+    required this.id,
+    required this.body,
+    required this.createdAt,
+  });
+
+  factory ArticleUpdateEntry.fromJson(Map<String, dynamic> json) {
+    return ArticleUpdateEntry(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      body: json['body'] ?? '',
+      createdAt: json['created_at'] ?? '',
+    );
+  }
+}
+
 class ArticleDetail {
   final int id;
   final String contentFamily;
   final String contentKind;
+  final String articleRole;
   final String title;
   final String slug;
   final String body;
@@ -170,11 +194,15 @@ class ArticleDetail {
   final List<ArticleAsset> assets;
   final List<ArticleSection> sections;
   final List<OutgoingRelation> outgoingRelations;
+  final List<IncomingRelation> incomingRelations;
+  final int appearanceCount;
+  final List<ArticleUpdateEntry> updates;
 
   ArticleDetail({
     required this.id,
     required this.contentFamily,
     required this.contentKind,
+    required this.articleRole,
     required this.title,
     required this.slug,
     required this.body,
@@ -187,6 +215,9 @@ class ArticleDetail {
     required this.assets,
     required this.sections,
     required this.outgoingRelations,
+    required this.incomingRelations,
+    required this.appearanceCount,
+    required this.updates,
   });
 
   factory ArticleDetail.fromJson(Map<String, dynamic> json) {
@@ -194,6 +225,7 @@ class ArticleDetail {
       id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
       contentFamily: json['content_family'] ?? '',
       contentKind: json['content_kind'] ?? '',
+      articleRole: json['article_role'] ?? 'event',
       title: json['title'] ?? '',
       slug: json['slug'] ?? '',
       body: json['body'] ?? '',
@@ -206,6 +238,9 @@ class ArticleDetail {
       assets: (json['assets'] as List?)?.map((e) => ArticleAsset.fromJson(e as Map<String, dynamic>)).toList() ?? [],
       sections: (json['sections'] as List?)?.map((e) => ArticleSection.fromJson(e as Map<String, dynamic>)).toList() ?? [],
       outgoingRelations: (json['outgoing_relations'] as List?)?.map((e) => OutgoingRelation.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      incomingRelations: (json['incoming_relations'] as List?)?.map((e) => IncomingRelation.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      appearanceCount: int.tryParse(json['appearance_count']?.toString() ?? '') ?? 0,
+      updates: (json['updates'] as List?)?.map((e) => ArticleUpdateEntry.fromJson(e as Map<String, dynamic>)).toList() ?? [],
     );
   }
 }
@@ -229,6 +264,29 @@ class OutgoingRelation {
       relationType: json['relation_type'] ?? '',
       label: json['label'] as String?,
       targetArticle: ArticleSummary.fromJson(json['target_article'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class IncomingRelation {
+  final int id;
+  final String relationType;
+  final String? label;
+  final ArticleSummary sourceArticle;
+
+  IncomingRelation({
+    required this.id,
+    required this.relationType,
+    this.label,
+    required this.sourceArticle,
+  });
+
+  factory IncomingRelation.fromJson(Map<String, dynamic> json) {
+    return IncomingRelation(
+      id: int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      relationType: json['relation_type'] ?? '',
+      label: json['label'] as String?,
+      sourceArticle: ArticleSummary.fromJson(json['source_article'] as Map<String, dynamic>),
     );
   }
 }

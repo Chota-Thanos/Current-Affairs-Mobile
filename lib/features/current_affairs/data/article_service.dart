@@ -9,6 +9,7 @@ class ArticleService {
   // Fetch articles from the feed
   Future<Map<String, dynamic>> getArticles({
     required String contentKind,
+    String? articleRole,
     String? category,
     String? month,
     String? year,
@@ -21,6 +22,9 @@ class ArticleService {
       'limit': limit.toString(),
     };
 
+    if (articleRole != null && articleRole.isNotEmpty) {
+      queryParams['article_role'] = articleRole;
+    }
     if (category != null && category.isNotEmpty && category != 'all') {
       queryParams['category'] = category;
     }

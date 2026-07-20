@@ -83,6 +83,12 @@ String htmlToMarkdown(String html) {
   // Break lines
   mdText = mdText.replaceAll(RegExp(r'<br\b\s*/?>', caseSensitive: false), '\n');
 
+  // Links: <a href="url">text</a> -> [text](url), so flutter_markdown keeps them tappable
+  mdText = mdText.replaceAllMapped(
+    RegExp(r'<a\b[^>]*href="([^"]*)"[^>]*>(.*?)</a>', caseSensitive: false, dotAll: true),
+    (match) => '[${match.group(2)}](${match.group(1)})',
+  );
+
   // Strip other unknown HTML tags but keep their contents
   mdText = mdText.replaceAll(RegExp(r'<[^>]+>'), '');
 
