@@ -8,6 +8,7 @@ import '../../workspace/models/workspace_models.dart';
 import '../data/article_service.dart';
 import '../models/article_models.dart';
 import 'article_detail_screen.dart';
+import '../../workspace/presentation/notes_space_dashboard_screen.dart';
 
 class DailyNewsFeedScreen extends StatefulWidget {
   final int initialTab;
@@ -344,10 +345,25 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
     return const Color(0xFF475569); // Slate
   }
 
+  Future<void> _openCreateRepository() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotesSpaceDashboardScreen(autoOpenCreateForm: true)),
+    );
+    if (mounted) _loadCollections();
+  }
+
   void _showSaveToRepoDialog(int articleId) {
     if (_collections.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please create a repository folder in the Home tab first.")),
+        SnackBar(
+          content: const Text("You don't have a repository yet."),
+          action: SnackBarAction(
+            label: "CREATE ONE",
+            onPressed: () => _openCreateRepository(),
+          ),
+          duration: const Duration(seconds: 6),
+        ),
       );
       return;
     }
@@ -435,16 +451,16 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Off-white/slate-50
+      backgroundColor: AppColors.paper,
       body: RefreshIndicator(
-        color: const Color(0xFF101E60),
+        color: AppColors.brandNavy,
         onRefresh: _loadFiltersAndArticles,
         child: CustomScrollView(
           slivers: [
             // 1. Search Bar at the Top
             SliverToBoxAdapter(
               child: Container(
-                color: Colors.white,
+                color: AppColors.surface,
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: TextField(
                   controller: _searchController,
@@ -455,10 +471,10 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                   },
                   decoration: InputDecoration(
                     hintText: "Search topics, articles, or notes...",
-                    prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted, size: 20),
+                    prefixIcon: Icon(Icons.search_rounded, color: AppColors.muted, size: 20),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 20, color: AppColors.muted),
+                            icon: Icon(Icons.close_rounded, size: 20, color: AppColors.muted),
                             onPressed: () {
                               _searchController.clear();
                               setState(() {
@@ -468,7 +484,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                           )
                         : null,
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                    fillColor: const Color(0xFFF1F5F9), // slate-100
+                    fillColor: AppColors.paper,
                     filled: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -480,7 +496,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF101E60), width: 1.5),
+                      borderSide: BorderSide(color: AppColors.brandNavy, width: 1.5),
                     ),
                   ),
                 ),
@@ -493,7 +509,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
             if (gsPapers.isNotEmpty)
               SliverToBoxAdapter(
                 child: Container(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                   child: SizedBox(
                     height: 34,
@@ -508,7 +524,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                             label: const Text("All Papers"),
                             selected: isSelected,
                             selectedColor: const Color(0xFFE11D48),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            backgroundColor: AppColors.paper,
                             labelStyle: GoogleFonts.inter(
                               fontSize: 10.5,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -536,7 +552,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                           label: Text(paper.name),
                           selected: isSelected,
                           selectedColor: const Color(0xFFE11D48),
-                          backgroundColor: const Color(0xFFF1F5F9),
+                          backgroundColor: AppColors.paper,
                           labelStyle: GoogleFonts.inter(
                             fontSize: 10.5,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -564,7 +580,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
             if (subjects.isNotEmpty)
               SliverToBoxAdapter(
                 child: Container(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
                   child: SizedBox(
                     height: 38,
@@ -579,8 +595,8 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                             avatar: Icon(Icons.apps_rounded, size: 14, color: isSelected ? Colors.white : AppColors.muted),
                             label: const Text("All"),
                             selected: isSelected,
-                            selectedColor: const Color(0xFF101E60),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            selectedColor: AppColors.brandNavy,
+                            backgroundColor: AppColors.paper,
                             labelStyle: GoogleFonts.inter(
                               fontSize: 11.5,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -614,7 +630,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                           label: Text(subject.name),
                           selected: isSelected,
                           selectedColor: subjColor,
-                          backgroundColor: const Color(0xFFF1F5F9),
+                          backgroundColor: AppColors.paper,
                           labelStyle: GoogleFonts.inter(
                             fontSize: 11.5,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -641,7 +657,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
             if (topics.isNotEmpty)
               SliverToBoxAdapter(
                 child: Container(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                   child: SizedBox(
                     height: 34,
@@ -655,8 +671,8 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                           return ChoiceChip(
                             label: const Text("All Topics"),
                             selected: isSelected,
-                            selectedColor: const Color(0xFF101E60),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            selectedColor: AppColors.brandNavy,
+                            backgroundColor: AppColors.paper,
                             labelStyle: GoogleFonts.inter(
                               fontSize: 10.5,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -681,8 +697,8 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                         return ChoiceChip(
                           label: Text(topic.name),
                           selected: isSelected,
-                          selectedColor: const Color(0xFF101E60),
-                          backgroundColor: const Color(0xFFF1F5F9),
+                          selectedColor: AppColors.brandNavy,
+                          backgroundColor: AppColors.paper,
                           labelStyle: GoogleFonts.inter(
                             fontSize: 10.5,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -708,7 +724,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
             if (subtopics.isNotEmpty)
               SliverToBoxAdapter(
                 child: Container(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
                   child: SizedBox(
                     height: 34,
@@ -722,8 +738,8 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                           return ChoiceChip(
                             label: const Text("All Subtopics"),
                             selected: isSelected,
-                            selectedColor: const Color(0xFF101E60),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            selectedColor: AppColors.brandNavy,
+                            backgroundColor: AppColors.paper,
                             labelStyle: GoogleFonts.inter(
                               fontSize: 10.5,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -747,8 +763,8 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                         return ChoiceChip(
                           label: Text(subtopic.name),
                           selected: isSelected,
-                          selectedColor: const Color(0xFF101E60),
-                          backgroundColor: const Color(0xFFF1F5F9),
+                          selectedColor: AppColors.brandNavy,
+                          backgroundColor: AppColors.paper,
                           labelStyle: GoogleFonts.inter(
                             fontSize: 10.5,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
@@ -772,7 +788,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
             // 3. Sub-toggles
             SliverToBoxAdapter(
               child: Container(
-                color: Colors.white,
+                color: AppColors.surface,
                 padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
                 child: Row(
                   children: [
@@ -780,12 +796,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       ChoiceChip(
                         label: const Text("Daily News"),
                         selected: _selectedPrelimsSubTab == 0,
-                        selectedColor: const Color(0xFF101E60).withValues(alpha: 0.08),
-                        backgroundColor: Colors.white,
+                        selectedColor: AppColors.brandNavy.withValues(alpha: 0.08),
+                        backgroundColor: AppColors.surface,
                         labelStyle: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: _selectedPrelimsSubTab == 0 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedPrelimsSubTab == 0 ? const Color(0xFF101E60) : AppColors.muted,
+                          color: _selectedPrelimsSubTab == 0 ? AppColors.brandNavy : AppColors.muted,
                         ),
                         onSelected: (val) {
                           if (val) {
@@ -798,12 +814,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       ChoiceChip(
                         label: const Text("Prelims PYQ"),
                         selected: _selectedPrelimsSubTab == 1,
-                        selectedColor: const Color(0xFF101E60).withValues(alpha: 0.08),
-                        backgroundColor: Colors.white,
+                        selectedColor: AppColors.brandNavy.withValues(alpha: 0.08),
+                        backgroundColor: AppColors.surface,
                         labelStyle: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: _selectedPrelimsSubTab == 1 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedPrelimsSubTab == 1 ? const Color(0xFF101E60) : AppColors.muted,
+                          color: _selectedPrelimsSubTab == 1 ? AppColors.brandNavy : AppColors.muted,
                         ),
                         onSelected: (val) {
                           if (val) {
@@ -816,12 +832,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       ChoiceChip(
                         label: const Text("Concepts"),
                         selected: _selectedPrelimsSubTab == 2,
-                        selectedColor: const Color(0xFF101E60).withValues(alpha: 0.08),
-                        backgroundColor: Colors.white,
+                        selectedColor: AppColors.brandNavy.withValues(alpha: 0.08),
+                        backgroundColor: AppColors.surface,
                         labelStyle: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: _selectedPrelimsSubTab == 2 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedPrelimsSubTab == 2 ? const Color(0xFF101E60) : AppColors.muted,
+                          color: _selectedPrelimsSubTab == 2 ? AppColors.brandNavy : AppColors.muted,
                         ),
                         onSelected: (val) {
                           if (val) {
@@ -834,12 +850,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       ChoiceChip(
                         label: const Text("Summaries"),
                         selected: _selectedMainsSubTab == 0,
-                        selectedColor: const Color(0xFF101E60).withValues(alpha: 0.08),
-                        backgroundColor: Colors.white,
+                        selectedColor: AppColors.brandNavy.withValues(alpha: 0.08),
+                        backgroundColor: AppColors.surface,
                         labelStyle: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: _selectedMainsSubTab == 0 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedMainsSubTab == 0 ? const Color(0xFF101E60) : AppColors.muted,
+                          color: _selectedMainsSubTab == 0 ? AppColors.brandNavy : AppColors.muted,
                         ),
                         onSelected: (val) {
                           if (val) {
@@ -852,12 +868,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       ChoiceChip(
                         label: const Text("Mains Notes"),
                         selected: _selectedMainsSubTab == 1,
-                        selectedColor: const Color(0xFF101E60).withValues(alpha: 0.08),
-                        backgroundColor: Colors.white,
+                        selectedColor: AppColors.brandNavy.withValues(alpha: 0.08),
+                        backgroundColor: AppColors.surface,
                         labelStyle: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: _selectedMainsSubTab == 1 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedMainsSubTab == 1 ? const Color(0xFF101E60) : AppColors.muted,
+                          color: _selectedMainsSubTab == 1 ? AppColors.brandNavy : AppColors.muted,
                         ),
                         onSelected: (val) {
                           if (val) {
@@ -870,12 +886,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       ChoiceChip(
                         label: const Text("Mains PYQ"),
                         selected: _selectedMainsSubTab == 2,
-                        selectedColor: const Color(0xFF101E60).withValues(alpha: 0.08),
-                        backgroundColor: Colors.white,
+                        selectedColor: AppColors.brandNavy.withValues(alpha: 0.08),
+                        backgroundColor: AppColors.surface,
                         labelStyle: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: _selectedMainsSubTab == 2 ? FontWeight.bold : FontWeight.normal,
-                          color: _selectedMainsSubTab == 2 ? const Color(0xFF101E60) : AppColors.muted,
+                          color: _selectedMainsSubTab == 2 ? AppColors.brandNavy : AppColors.muted,
                         ),
                         onSelected: (val) {
                           if (val) {
@@ -913,12 +929,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
 
             // 7. Feed list
             _loading && filteredArticles.isEmpty
-                ? const SliverFillRemaining(
+                ? SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
                       child: Padding(
                         padding: EdgeInsets.all(32.0),
-                        child: CircularProgressIndicator(color: Color(0xFF101E60)),
+                        child: CircularProgressIndicator(color: AppColors.brandNavy),
                       ),
                     ),
                   )
@@ -982,7 +998,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                color: isSelected ? const Color(0xFF101E60) : AppColors.muted,
+                color: isSelected ? AppColors.brandNavy : AppColors.muted,
               ),
             ),
           ),
@@ -1002,7 +1018,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -1011,7 +1027,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
             offset: Offset(0, 4),
           ),
         ],
-        border: Border.all(color: const Color(0xFFF1F5F9)), // thin border
+        border: Border.all(color: AppColors.line), // thin border
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1031,7 +1047,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                 article.primaryAsset!.fileUrl,
                 height: 140,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(height: 140, color: const Color(0xFFF8FAFC)),
+                errorBuilder: (_, __, ___) => Container(height: 140, color: AppColors.paper),
               ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -1059,7 +1075,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.bookmark_outline_rounded, color: AppColors.muted, size: 20),
+                        icon: Icon(Icons.bookmark_outline_rounded, color: AppColors.muted, size: 20),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => _showSaveToRepoDialog(article.id),
@@ -1098,7 +1114,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                   // Metadata bottom row
                   Row(
                     children: [
-                      const Icon(Icons.access_time_rounded, size: 14, color: AppColors.muted),
+                      Icon(Icons.access_time_rounded, size: 14, color: AppColors.muted),
                       const SizedBox(width: 4),
                       Text(
                         article.publicationDate != null 
@@ -1113,19 +1129,19 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
                       const Spacer(),
                       // Add to Notes Button
                       TextButton.icon(
-                        icon: const Icon(Icons.note_add_outlined, size: 14, color: Color(0xFF101E60)),
+                        icon: Icon(Icons.note_add_outlined, size: 14, color: AppColors.brandNavy),
                         label: Text(
                           "Add to Notes",
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF101E60),
+                            color: AppColors.brandNavy,
                           ),
                         ),
                         onPressed: () => _showSaveToRepoDialog(article.id),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          backgroundColor: const Color(0xFF101E60).withValues(alpha: 0.05),
+                          backgroundColor: AppColors.brandNavy.withValues(alpha: 0.05),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
@@ -1155,7 +1171,7 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.feed_outlined, color: AppColors.muted, size: 44),
+          Icon(Icons.feed_outlined, color: AppColors.muted, size: 44),
           const SizedBox(height: 12),
           Text(
             "No articles found.",
@@ -1202,12 +1218,12 @@ class DailyNewsFeedScreenState extends State<DailyNewsFeedScreen> {
           _loadOnlyArticles();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF101E60),
+          backgroundColor: AppColors.surface,
+          foregroundColor: AppColors.brandNavy,
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: const Color(0xFF101E60).withValues(alpha: 0.15)),
+            side: BorderSide(color: AppColors.brandNavy.withValues(alpha: 0.15)),
           ),
         ),
         child: const Text("LOAD MORE ARTICLES"),

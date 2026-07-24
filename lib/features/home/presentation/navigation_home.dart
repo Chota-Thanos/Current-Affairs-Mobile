@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/theme_controller.dart';
 import 'dashboard_home_screen.dart';
 import '../../current_affairs/presentation/daily_news_feed_screen.dart';
 import '../../workspace/presentation/notes_space_dashboard_screen.dart';
@@ -49,6 +50,65 @@ class NavigationHomeState extends State<NavigationHome> {
     }
   }
 
+  void _showThemeChooser(BuildContext context) {
+    final controller = Provider.of<ThemeController>(context, listen: false);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetContext) {
+        Widget option(String label, IconData icon, ThemeMode mode, String subtitle) {
+          final selected = controller.mode == mode;
+          return ListTile(
+            leading: Icon(icon, color: selected ? AppColors.civic : AppColors.muted),
+            title: Text(
+              label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: selected ? AppColors.civic : AppColors.ink,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted),
+            ),
+            trailing: selected ? const Icon(Icons.check_rounded, color: AppColors.civic) : null,
+            onTap: () {
+              controller.setMode(mode);
+              Navigator.pop(sheetContext);
+            },
+          );
+        }
+
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Appearance",
+                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.ink),
+                  ),
+                ),
+              ),
+              option("System default", Icons.brightness_auto_outlined, ThemeMode.system,
+                  "Match your device's light/dark setting"),
+              option("Light", Icons.light_mode_outlined, ThemeMode.light, "Always use the light theme"),
+              option("Dark", Icons.dark_mode_outlined, ThemeMode.dark, "Always use the dark theme"),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final apiClient = Provider.of<ApiClient>(context);
@@ -57,12 +117,12 @@ class NavigationHomeState extends State<NavigationHome> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 1,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu_rounded, color: AppColors.ink),
+            icon: Icon(Icons.menu_rounded, color: AppColors.ink),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -71,14 +131,14 @@ class NavigationHomeState extends State<NavigationHome> {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF101E60), // Dark Navy blue matching design
+            color: AppColors.brandNavy,
             letterSpacing: 0.8,
           ),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded, color: AppColors.ink),
+            icon: Icon(Icons.notifications_none_rounded, color: AppColors.ink),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("No new notifications")),
@@ -99,15 +159,15 @@ class NavigationHomeState extends State<NavigationHome> {
         child: Column(
           children: [
             UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color(0xFF101E60),
+              decoration: BoxDecoration(
+                color: AppColors.brandNavy,
               ),
               currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.surface,
                 child: Text(
                   username.isNotEmpty ? username[0].toUpperCase() : 'S',
-                  style: const TextStyle(
-                    color: Color(0xFF101E60),
+                  style: TextStyle(
+                    color: AppColors.ink,
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
                   ),
@@ -181,6 +241,14 @@ class NavigationHomeState extends State<NavigationHome> {
                 setState(() => _currentIndex = 4);
               },
             ),
+            ListTile(
+              leading: Icon(Icons.brightness_6_outlined, color: AppColors.brandNavy),
+              title: const Text("Appearance"),
+              onTap: () {
+                Navigator.pop(context);
+                _showThemeChooser(context);
+              },
+            ),
             const Spacer(),
             const Divider(),
             ListTile(
@@ -216,8 +284,8 @@ class NavigationHomeState extends State<NavigationHome> {
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
-          backgroundColor: Colors.white,
-          indicatorColor: const Color(0xFF101E60).withValues(alpha: 0.08),
+          backgroundColor: AppColors.surface,
+          indicatorColor: AppColors.brandNavy.withValues(alpha: 0.08),
           height: 65,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           onDestinationSelected: (index) {
@@ -231,28 +299,28 @@ class NavigationHomeState extends State<NavigationHome> {
           },
           destinations: [
             NavigationDestination(
-              icon: Icon(Icons.home_outlined, color: _currentIndex == 0 ? const Color(0xFF101E60) : AppColors.muted),
-              selectedIcon: const Icon(Icons.home_rounded, color: Color(0xFF101E60)),
+              icon: Icon(Icons.home_outlined, color: _currentIndex == 0 ? AppColors.brandNavy : AppColors.muted),
+              selectedIcon: Icon(Icons.home_rounded, color: AppColors.brandNavy),
               label: "Home",
             ),
             NavigationDestination(
-              icon: Icon(Icons.chrome_reader_mode_outlined, color: _currentIndex == 1 ? const Color(0xFF101E60) : AppColors.muted),
-              selectedIcon: const Icon(Icons.chrome_reader_mode_rounded, color: Color(0xFF101E60)),
+              icon: Icon(Icons.chrome_reader_mode_outlined, color: _currentIndex == 1 ? AppColors.brandNavy : AppColors.muted),
+              selectedIcon: Icon(Icons.chrome_reader_mode_rounded, color: AppColors.brandNavy),
               label: "Prelims",
             ),
             NavigationDestination(
-              icon: Icon(Icons.history_edu_outlined, color: _currentIndex == 2 ? const Color(0xFF101E60) : AppColors.muted),
-              selectedIcon: const Icon(Icons.history_edu_rounded, color: Color(0xFF101E60)),
+              icon: Icon(Icons.history_edu_outlined, color: _currentIndex == 2 ? AppColors.brandNavy : AppColors.muted),
+              selectedIcon: Icon(Icons.history_edu_rounded, color: AppColors.brandNavy),
               label: "Mains",
             ),
             NavigationDestination(
-              icon: Icon(Icons.folder_shared_outlined, color: _currentIndex == 3 ? const Color(0xFF101E60) : AppColors.muted),
-              selectedIcon: const Icon(Icons.folder_shared_rounded, color: Color(0xFF101E60)),
+              icon: Icon(Icons.folder_shared_outlined, color: _currentIndex == 3 ? AppColors.brandNavy : AppColors.muted),
+              selectedIcon: Icon(Icons.folder_shared_rounded, color: AppColors.brandNavy),
               label: "My Notes",
             ),
             NavigationDestination(
-              icon: Icon(Icons.psychology_outlined, color: _currentIndex == 4 ? const Color(0xFF101E60) : AppColors.muted),
-              selectedIcon: const Icon(Icons.psychology_rounded, color: Color(0xFF101E60)),
+              icon: Icon(Icons.psychology_outlined, color: _currentIndex == 4 ? AppColors.brandNavy : AppColors.muted),
+              selectedIcon: Icon(Icons.psychology_rounded, color: AppColors.brandNavy),
               label: "AI Helper",
             ),
           ],

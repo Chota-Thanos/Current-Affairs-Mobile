@@ -16,7 +16,9 @@ import 'widgets/own_article_dialog.dart';
 import 'widgets/bulk_import_dialog.dart';
 
 class NotesSpaceDashboardScreen extends StatefulWidget {
-  const NotesSpaceDashboardScreen({super.key});
+  final bool autoOpenCreateForm;
+
+  const NotesSpaceDashboardScreen({super.key, this.autoOpenCreateForm = false});
 
   @override
   State<NotesSpaceDashboardScreen> createState() => _NotesSpaceDashboardScreenState();
@@ -50,6 +52,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
     super.initState();
     final apiClient = Provider.of<ApiClient>(context, listen: false);
     _service = WorkspaceService(apiClient: apiClient);
+    _showCreateForm = widget.autoOpenCreateForm;
     _loadAllWorkspaceData();
   }
 
@@ -216,8 +219,8 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading && _dashboard == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF101E60))),
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.brandNavy)),
       );
     }
 
@@ -246,9 +249,9 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
     final username = apiClient.user?['username'] ?? 'Aspirant';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.paper,
       body: RefreshIndicator(
-        color: const Color(0xFF101E60),
+        color: AppColors.brandNavy,
         onRefresh: _loadAllWorkspaceData,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -295,15 +298,15 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF101E60), Color(0xFF1B3A9A)],
+        gradient: LinearGradient(
+          colors: [AppColors.brandNavy, Color(0xFF1B3A9A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF101E60).withValues(alpha: 0.25),
+            color: AppColors.brandNavy.withValues(alpha: 0.25),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -360,8 +363,8 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF101E60),
+                    backgroundColor: AppColors.surface,
+                    foregroundColor: AppColors.brandNavy,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
@@ -414,7 +417,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
       mainAxisSpacing: 12,
       childAspectRatio: 1.6,
       children: [
-        _buildStatCard('Saved Notes', dash.savedArticles.toString(), Icons.bookmark_rounded, const Color(0xFF101E60)),
+        _buildStatCard('Saved Notes', dash.savedArticles.toString(), Icons.bookmark_rounded, AppColors.brandNavy),
         _buildStatCard('Completed', dash.completedArticles.toString(), Icons.check_circle_rounded, AppColors.emerald),
         _buildStatCard('Due Revisions', dash.dueRevisions.toString(), Icons.history_rounded, AppColors.saffron),
         _buildStatCard('Read Time (7d)', timeStr, Icons.timer_rounded, AppColors.ink),
@@ -425,7 +428,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: const [
@@ -473,7 +476,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (continueItems.isNotEmpty)
-          Expanded(child: _buildQueuePanel('Continue Reading', Icons.play_circle_outline_rounded, const Color(0xFF101E60), continueItems)),
+          Expanded(child: _buildQueuePanel('Continue Reading', Icons.play_circle_outline_rounded, AppColors.brandNavy, continueItems)),
         if (continueItems.isNotEmpty && revisionItems.isNotEmpty)
           const SizedBox(width: 12),
         if (revisionItems.isNotEmpty)
@@ -485,7 +488,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
   Widget _buildQueuePanel(String title, IconData icon, Color color, List<StudentFork> items) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -553,7 +556,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.folder_shared_rounded, color: Color(0xFF101E60), size: 18),
+            Icon(Icons.folder_shared_rounded, color: AppColors.brandNavy, size: 18),
             const SizedBox(width: 6),
             Text(
               'Repositories',
@@ -581,7 +584,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.line),
             ),
@@ -632,13 +635,13 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
             ? Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.line, style: BorderStyle.solid),
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.folder_open_rounded, size: 32, color: AppColors.muted),
+                    Icon(Icons.folder_open_rounded, size: 32, color: AppColors.muted),
                     const SizedBox(height: 8),
                     Text(
                       'Create repositories for syllabus topics, practice, or monthly notes.',
@@ -664,7 +667,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
@@ -682,7 +685,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   '${col.itemCount} items${col.description != null ? ' • ${col.description}' : ''}',
-                                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                                  style: TextStyle(fontSize: 11, color: AppColors.muted),
                                 ),
                                 if (col.customTags.isNotEmpty) ...[
                                   const SizedBox(height: 6),
@@ -691,17 +694,17 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
                                     children: col.customTags.map((tag) => Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF101E60).withValues(alpha: 0.08),
+                                        color: AppColors.brandNavy.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: Text(tag, style: const TextStyle(fontSize: 9, color: Color(0xFF101E60), fontWeight: FontWeight.bold)),
+                                      child: Text(tag, style: TextStyle(fontSize: 9, color: AppColors.brandNavy, fontWeight: FontWeight.bold)),
                                     )).toList(),
                                   ),
                                 ],
                               ],
                             ),
                           ),
-                          const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF101E60)),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.brandNavy),
                         ],
                       ),
                     ),
@@ -717,7 +720,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
@@ -727,11 +730,11 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.folder_open_outlined, color: Color(0xFF101E60), size: 16),
+              Icon(Icons.folder_open_outlined, color: AppColors.brandNavy, size: 16),
               const SizedBox(width: 6),
               Text(
                 'SUGGESTIONS FOR YOUR NOTES',
-                style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w800, color: const Color(0xFF101E60)),
+                style: GoogleFonts.inter(fontSize: 9.5, fontWeight: FontWeight.w800, color: AppColors.brandNavy),
               ),
             ],
           ),
@@ -785,7 +788,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
                         children: [
                           Text(
                             rec.contentKind.replaceAll('_', ' ').toUpperCase(),
-                            style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: const Color(0xFF101E60)),
+                            style: GoogleFonts.inter(fontSize: 8, fontWeight: FontWeight.bold, color: AppColors.brandNavy),
                           ),
                           const SizedBox(height: 4),
                           GestureDetector(
@@ -834,7 +837,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
         // Bulk import collapsible
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.line),
           ),
@@ -874,7 +877,7 @@ class _NotesSpaceDashboardScreenState extends State<NotesSpaceDashboardScreen> {
         // Write own article collapsible
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.line),
           ),

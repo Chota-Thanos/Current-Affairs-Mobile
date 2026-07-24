@@ -449,7 +449,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> {
                         title: Text(art.title, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
                         subtitle: Text(
                           "${art.contentKind.replaceAll('_', ' ').toUpperCase()} • ${art.category?.name ?? ''}",
-                          style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                          style: TextStyle(fontSize: 10, color: AppColors.muted),
                         ),
                         onChanged: (val) {
                           setState(() {

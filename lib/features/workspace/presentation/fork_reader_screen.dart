@@ -288,9 +288,9 @@ class _ForkReaderScreenState extends State<ForkReaderScreen> {
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         title: Text('Saved Article', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18)),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -354,9 +354,9 @@ class _ForkReaderScreenState extends State<ForkReaderScreen> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.muted),
+                      Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.muted),
                       const SizedBox(width: 4),
-                      Text(_formatDate(article?.publicationDate), style: const TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.bold)),
+                      Text(_formatDate(article?.publicationDate), style: TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.bold)),
                       if (article?.slug != null) ...[
                         const Spacer(),
                         TextButton(
@@ -555,7 +555,7 @@ class _AnnotationListTile extends StatelessWidget {
             ),
             IconButton(
               onPressed: () => onDelete(),
-              icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.muted),
+              icon: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.muted),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),

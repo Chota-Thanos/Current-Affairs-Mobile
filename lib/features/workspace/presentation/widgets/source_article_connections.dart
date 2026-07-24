@@ -55,7 +55,7 @@ class SourceArticleConnections extends StatelessWidget {
 
             if (updates.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Divider(height: 1, color: AppColors.line),
+              Divider(height: 1, color: AppColors.line),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -84,7 +84,7 @@ class SourceArticleConnections extends StatelessWidget {
 
             if (outgoing.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Divider(height: 1, color: AppColors.line),
+              Divider(height: 1, color: AppColors.line),
               const SizedBox(height: 12),
               Text(
                 "RELATED READING",
@@ -102,7 +102,7 @@ class SourceArticleConnections extends StatelessWidget {
 
             if (incoming.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Divider(height: 1, color: AppColors.line),
+              Divider(height: 1, color: AppColors.line),
               const SizedBox(height: 12),
               Text(
                 "APPEARS IN $appearanceCount ARTICLE${appearanceCount == 1 ? '' : 'S'}",

@@ -98,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.paper,
           gradient: RadialGradient(
             center: Alignment(0, -0.6),
@@ -317,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.muted),
+                          Icon(Icons.arrow_forward_rounded, size: 14, color: AppColors.muted),
                         ],
                       ),
                     ),

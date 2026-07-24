@@ -279,7 +279,7 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
 
   Widget _buildSearchAndFiltersHeader() {
     return Container(
-      color: Colors.white,
+      color: AppColors.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         children: [
@@ -292,7 +292,7 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
             },
             decoration: InputDecoration(
               hintText: "Search notes by title, body, or tags...",
-              prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted),
+              prefixIcon: Icon(Icons.search_rounded, color: AppColors.muted),
               filled: true,
               fillColor: AppColors.paper.withValues(alpha: 0.5),
               contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
@@ -363,7 +363,7 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-          const Icon(Icons.note_alt_outlined, size: 48, color: AppColors.line),
+          Icon(Icons.note_alt_outlined, size: 48, color: AppColors.line),
           const SizedBox(height: 12),
           Text(
             _searchQuery.isNotEmpty 
@@ -485,7 +485,7 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
                   ),
                 ),
 
-              const Divider(height: 24, color: AppColors.line),
+              Divider(height: 24, color: AppColors.line),
 
               // Action Buttons Row
               Padding(
@@ -536,9 +536,9 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
     final isNew = _editingArticle == null;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         scrolledUnderElevation: 1,
         title: Text(
@@ -546,7 +546,7 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.ink),
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.ink),
           onPressed: () {
             setState(() {
               _isEditing = false;
@@ -623,7 +623,7 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
                           contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         ),
                         items: [
-                          const DropdownMenuItem(
+                          DropdownMenuItem(
                             value: null,
                             child: Text("None (Do not link folder)", style: TextStyle(color: AppColors.muted)),
                           ),
@@ -793,7 +793,7 @@ class _PersonalArticlesScreenState extends State<PersonalArticlesScreen> {
                 ),
             ],
           ),
-          const Divider(height: 24, color: AppColors.line),
+          Divider(height: 24, color: AppColors.line),
         ],
         body.isEmpty
             ? Center(

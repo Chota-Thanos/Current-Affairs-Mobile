@@ -24,7 +24,7 @@ class _InteractivePrelimsPyqWidgetState extends State<InteractivePrelimsPyqWidge
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.line, width: 1.5),
         boxShadow: const [
@@ -238,7 +238,7 @@ class _InteractivePrelimsPyqWidgetState extends State<InteractivePrelimsPyqWidge
               },
               style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                side: const BorderSide(color: AppColors.line),
+                side: BorderSide(color: AppColors.line),
               ),
               child: const Text("RETRY QUESTION"),
             ),
@@ -262,7 +262,7 @@ class InteractiveMainsPyqWidget extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.line, width: 1.5),
         boxShadow: const [
@@ -325,7 +325,7 @@ class InteractiveMainsPyqWidget extends StatelessWidget {
             const SizedBox(height: 16),
           ],
 
-          const Divider(color: AppColors.line),
+          Divider(color: AppColors.line),
           const SizedBox(height: 10),
 
           // Accordion elements for Model Answer Guidelines

@@ -293,14 +293,14 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
   Widget build(BuildContext context) {
     final apiClient = Provider.of<ApiClient>(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.paper,
       body: Stack(
         children: [
           RefreshIndicator(
-            color: const Color(0xFF101E60),
+            color: AppColors.brandNavy,
             onRefresh: _loadDashboardData,
             child: _loading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF101E60)))
+            ? Center(child: CircularProgressIndicator(color: AppColors.brandNavy))
             : _error != null
                 ? _buildErrorWidget()
                 : SingleChildScrollView(
@@ -409,7 +409,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                   ),
                 ],
           onClose: () => setState(() => _showTour = false),
-          themeColor: const Color(0xFF101E60),
+          themeColor: AppColors.brandNavy,
         ),
       ],
     ),
@@ -494,7 +494,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
       return Container(
         height: 120,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.line),
         ),
@@ -516,9 +516,9 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
           return Container(
             width: MediaQuery.of(context).size.width * 0.78,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+              border: Border.all(color: AppColors.line),
               boxShadow: const [
                 BoxShadow(color: Color(0x04000000), blurRadius: 8, offset: Offset(0, 3)),
               ],
@@ -541,7 +541,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                           ? Image.network(art.primaryAsset!.fileUrl, fit: BoxFit.cover)
                           : Stack(
                               children: [
-                                Positioned.fill(child: Container(color: const Color(0xFF101E60))),
+                                Positioned.fill(child: Container(color: AppColors.brandNavy)),
                                 Positioned(
                                   top: 12,
                                   left: 12,
@@ -627,7 +627,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.line),
         ),
@@ -655,9 +655,9 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        border: Border.all(color: AppColors.line),
         boxShadow: const [
           BoxShadow(color: Color(0x03000000), blurRadius: 8, offset: Offset(0, 3)),
         ],
@@ -678,7 +678,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
             children: [
               Container(
                 width: 5,
-                color: const Color(0xFF101E60),
+                color: AppColors.brandNavy,
               ),
               Expanded(
                 child: Padding(
@@ -691,7 +691,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.history_rounded, size: 13, color: AppColors.muted),
+                                Icon(Icons.history_rounded, size: 13, color: AppColors.muted),
                                 const SizedBox(width: 4),
                                 Text(
                                   "GS PAPER • ${category.toUpperCase()}",
@@ -720,8 +720,8 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                               borderRadius: BorderRadius.circular(2),
                               child: LinearProgressIndicator(
                                 value: (fork.progressPercent / 100.0).clamp(0.1, 1.0),
-                                backgroundColor: const Color(0xFFF1F5F9),
-                                color: const Color(0xFF101E60),
+                                backgroundColor: AppColors.paper,
+                                color: AppColors.brandNavy,
                                 minHeight: 3.5,
                               ),
                             ),
@@ -729,7 +729,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.arrow_forward_rounded, color: Color(0xFF101E60), size: 20),
+                      Icon(Icons.arrow_forward_rounded, color: AppColors.brandNavy, size: 20),
                     ],
                   ),
                 ),
@@ -746,7 +746,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
       return Container(
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.line),
         ),
@@ -764,7 +764,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
         return Card(
           margin: const EdgeInsets.only(bottom: 10),
           elevation: 0,
-          color: Colors.white,
+          color: AppColors.surface,
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             leading: CircleAvatar(
@@ -1017,10 +1017,10 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF101E60), size: 20),
+            child: Icon(Icons.auto_awesome_rounded, color: AppColors.brandNavy, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1048,7 +1048,7 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF101E60),
+              backgroundColor: AppColors.brandNavy,
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

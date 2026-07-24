@@ -242,9 +242,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
             "Article Reader",
             style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
           ),
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surface,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -275,9 +275,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           "Article Reader",
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: AppColors.ink, fontSize: 18),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.ink, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -294,15 +294,21 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF7ED),
+                          color: AppColors.isDark ? const Color(0xFF3A2412) : const Color(0xFFFFF7ED),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFFFD8A8)),
+                          border: Border.all(
+                            color: AppColors.isDark ? const Color(0xFF7C4A1E) : const Color(0xFFFFD8A8),
+                          ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline_rounded, color: const Color(0xFFEA580C), size: 16),
+                              Icon(
+                                Icons.info_outline_rounded,
+                                color: AppColors.isDark ? const Color(0xFFFDBA74) : const Color(0xFFEA580C),
+                                size: 16,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -310,7 +316,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                   style: GoogleFonts.inter(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF7C2D12),
+                                    color: AppColors.isDark ? const Color(0xFFFED7AA) : const Color(0xFF7C2D12),
                                   ),
                                 ),
                               ),
@@ -395,24 +401,24 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                           style: Theme.of(context).textTheme.displayMedium,
                         ),
                         const SizedBox(height: 14),
-                        const Divider(color: AppColors.line),
+                        Divider(color: AppColors.line),
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.muted),
+                            Icon(Icons.calendar_month_outlined, size: 14, color: AppColors.muted),
                             const SizedBox(width: 4),
                             Text(
                               _formatDate(article.publicationDate),
-                              style: const TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.bold),
                             ),
                             if (article.sourceName != null) ...[
                               const SizedBox(width: 16),
-                              const Icon(Icons.link_outlined, size: 14, color: AppColors.muted),
+                              Icon(Icons.link_outlined, size: 14, color: AppColors.muted),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   article.sourceName!,
-                                  style: const TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.bold),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -526,7 +532,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                             for (int i = 0; i < article.updates.length; i++) ...[
                               if (i > 0) ...[
                                 const SizedBox(height: 14),
-                                const Divider(height: 1, color: AppColors.line),
+                                Divider(height: 1, color: AppColors.line),
                                 const SizedBox(height: 14),
                               ],
                               Text(
@@ -628,8 +634,8 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
 
           // Student Tools persistence bottom tray
           DecoratedBox(
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
               boxShadow: [
                 BoxShadow(color: Color(0x0C000000), blurRadius: 10, offset: Offset(0, -2))
               ],

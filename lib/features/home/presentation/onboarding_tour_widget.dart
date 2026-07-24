@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class TourStep {
   final GlobalKey targetKey;
@@ -141,7 +142,7 @@ class _OnboardingTourWidgetState extends State<OnboardingTourWidget> with Single
             elevation: 16,
             shadowColor: Colors.black.withOpacity(0.3),
             borderRadius: BorderRadius.circular(20),
-            color: Colors.white,
+            color: AppColors.surface,
             clipBehavior: Clip.antiAlias,
             child: Column(
               mainAxisSize: MainAxisSize.min,

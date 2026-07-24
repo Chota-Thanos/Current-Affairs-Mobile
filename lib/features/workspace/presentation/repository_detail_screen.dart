@@ -247,7 +247,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
           height: 400,
           child: ListView.separated(
             itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(color: AppColors.line),
+            separatorBuilder: (_, __) => Divider(color: AppColors.line),
             itemBuilder: (context, idx) {
               final item = items[idx];
               final title = _itemTitle(item);
@@ -456,7 +456,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
       margin: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.line),
       ),
@@ -537,7 +537,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
             TextField(
               controller: _repositoryTagsController,
               style: GoogleFonts.inter(fontSize: 13),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: "Weak topic, Revise before mock, Done",
                 fillColor: AppColors.paper,
                 filled: true,
@@ -726,7 +726,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
               decoration: InputDecoration(
                 hintText: "Add reminder or summary...",
                 hintStyle: TextStyle(color: Colors.brown[300]),
-                fillColor: Colors.white,
+                fillColor: AppColors.surface,
                 filled: true,
                 contentPadding: const EdgeInsets.all(10),
                 border: OutlineInputBorder(
@@ -882,9 +882,9 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
           TextField(
             controller: titleController,
             style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: "Title Copy",
-              fillColor: Colors.white,
+              fillColor: AppColors.surface,
               filled: true,
               contentPadding: EdgeInsets.all(10),
             ),
@@ -894,9 +894,9 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
             controller: bodyController,
             maxLines: 8,
             style: GoogleFonts.inter(fontSize: 13, height: 1.5),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: "Body Copy",
-              fillColor: Colors.white,
+              fillColor: AppColors.surface,
               filled: true,
               contentPadding: EdgeInsets.all(10),
             ),
@@ -943,7 +943,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.article_outlined, size: 14, color: AppColors.muted),
+              Icon(Icons.article_outlined, size: 14, color: AppColors.muted),
               const SizedBox(width: 6),
               Text(
                 "ARTICLE BODY PREVIEW",
@@ -981,7 +981,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
 
   Widget _buildActionsToolbar(StudentCollectionDetail repo, List<StudentCollectionItem> filteredItems) {
     return Container(
-      color: Colors.white,
+      color: AppColors.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -1122,7 +1122,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
       backgroundColor: AppColors.paper,
       appBar: AppBar(
         title: Text(repo.name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800)),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.pop(context),
@@ -1152,7 +1152,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
 
                 // Search & Filter options bar
                 Container(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
                   child: Column(
                     children: [
@@ -1498,7 +1498,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          const Divider(color: AppColors.line),
+          Divider(color: AppColors.line),
           const SizedBox(height: 8),
 
           // PERSONAL NOTES SECTION
@@ -1555,7 +1555,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          color: Colors.white,
+          color: AppColors.surface,
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
@@ -1597,7 +1597,7 @@ class _RepositoryDetailScreenState extends State<RepositoryDetailScreen> {
 
         if (cards.isNotEmpty)
           Container(
-            color: Colors.white,
+            color: AppColors.surface,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

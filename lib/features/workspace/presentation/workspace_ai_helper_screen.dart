@@ -265,7 +265,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
     return Scaffold(
       backgroundColor: AppColors.paper,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101E60),
+        backgroundColor: AppColors.brandNavy,
         foregroundColor: Colors.white,
         elevation: 0,
         title: Row(
@@ -281,7 +281,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            color: Colors.white,
+            color: AppColors.surface,
             child: TabBar(
               controller: _tabController,
               labelColor: AppColors.civic,
@@ -373,7 +373,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.line),
               boxShadow: const [BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2))],
@@ -494,7 +494,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
   Widget _buildGeneratedNoteCard() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.line),
         boxShadow: const [BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2))],
@@ -577,7 +577,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.line),
               boxShadow: const [BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2))],
@@ -693,7 +693,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.line),
             ),
@@ -776,7 +776,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppColors.line),
                 boxShadow: const [BoxShadow(color: Color(0x04000000), blurRadius: 8, offset: Offset(0, 2))],
@@ -1046,7 +1046,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
       child: Container(
         padding: const EdgeInsets.all(36),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.line),
         ),
@@ -1071,7 +1071,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.line, style: BorderStyle.solid),
       ),
@@ -1104,7 +1104,7 @@ class _WorkspaceAiHelperScreenState extends State<WorkspaceAiHelperScreen>
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.line)),
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.civic, width: 1.5)),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.surface,
     );
   }
 }
