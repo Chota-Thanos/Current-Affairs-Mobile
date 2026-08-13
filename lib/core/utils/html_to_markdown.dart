@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
+import '../theme/app_theme.dart';
 
 // Delimiters for the pointer-detail marker htmlToMarkdown() emits and
 // PointerDetailSyntax matches. Unlikely to collide with real article text —
@@ -267,12 +268,17 @@ class _PointerDetailState extends State<_PointerDetail> {
                       const SizedBox(width: 4),
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          '🔍',
-                          style: TextStyle(
-                            fontSize: (base.fontSize ?? 14) * 0.8,
-                            color: base.color?.withValues(alpha: _open ? 1 : 0.45),
-                          ),
+                        // A real Icon, not the 🔍 emoji — an emoji glyph is
+                        // drawn by the OS's own emoji font and ignores any
+                        // `color` set on it, so it could never actually be
+                        // given the app's blue. AppColors.civic matches the
+                        // blue this app already uses for its other
+                        // interactive/accent icons (e.g. the arrow icons on
+                        // this same screen).
+                        child: Icon(
+                          Icons.search_rounded,
+                          size: (base.fontSize ?? 14) * 0.9,
+                          color: AppColors.civic.withValues(alpha: _open ? 1 : 0.5),
                         ),
                       ),
                     ],
