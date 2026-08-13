@@ -1,10 +1,21 @@
 import '../../features/workspace/models/workspace_models.dart';
+import 'html_to_markdown.dart' show pointerMarkerStart, pointerMarkerMid, pointerMarkerEnd;
 
 /// Reduces htmlToMarkdown() output to clean, readable plain text so it can be
 /// shown in a SelectableText for annotation. Character offsets computed against
 /// this output are stable across reloads since it's a pure function of the body.
 String markdownToPlainText(String markdown) {
   var text = markdown;
+
+  // Pointer-detail blocks (Mains Note points) -> "label — detail" plain text.
+  // This view has no tap-to-expand affordance, so both halves just read
+  // together rather than leaking the raw marker syntax into a SelectableText.
+  // Must run before the generic markdown-marker stripping below, since it
+  // still needs the bold/link syntax inside label/detail intact to match.
+  text = text.replaceAllMapped(
+    RegExp('$pointerMarkerStart(.*?)$pointerMarkerMid(.*?)$pointerMarkerEnd', dotAll: true),
+    (m) => '${(m.group(1) ?? '').trim()} — ${(m.group(2) ?? '').trim()}',
+  );
 
   // Highlight spans -> inner text only
   text = text.replaceAllMapped(RegExp(r'::#[0-9a-fA-F]{6}::((?:(?!::).)+)::'), (m) => m.group(1) ?? '');

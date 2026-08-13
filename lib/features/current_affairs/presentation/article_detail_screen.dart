@@ -480,8 +480,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                             // Base Body markdown
                             MarkdownBody(
                               data: htmlToMarkdown(article.body),
-                              inlineSyntaxes: [HighlightSyntax()],
-                              builders: {'highlight': HighlightBuilder()},
+                              inlineSyntaxes: [HighlightSyntax(), PointerDetailSyntax()],
+                              builders: {
+                                'highlight': HighlightBuilder(),
+                                'pointerDetail': PointerDetailBuilder(onTapLink: _handleBodyLinkTap),
+                              },
                               onTapLink: _handleBodyLinkTap,
                               styleSheet: MarkdownStyleSheet(
                                 p: GoogleFonts.inter(fontSize: 14.5, color: AppColors.ink, height: 1.5, fontWeight: FontWeight.w400),
@@ -500,8 +503,12 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                                 const SizedBox(height: 8),
                                 MarkdownBody(
                                   data: htmlToMarkdown(section.body),
-                                  inlineSyntaxes: [HighlightSyntax()],
-                                  builders: {'highlight': HighlightBuilder()},
+                                  inlineSyntaxes: [HighlightSyntax(), PointerDetailSyntax()],
+                                  builders: {
+                                    'highlight': HighlightBuilder(),
+                                    'pointerDetail': PointerDetailBuilder(onTapLink: _handleBodyLinkTap),
+                                  },
+                                  onTapLink: _handleBodyLinkTap,
                                   styleSheet: MarkdownStyleSheet(
                                     p: GoogleFonts.inter(fontSize: 14.5, color: AppColors.ink, height: 1.5, fontWeight: FontWeight.w400),
                                   ),
